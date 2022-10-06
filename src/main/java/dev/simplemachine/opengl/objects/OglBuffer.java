@@ -13,7 +13,7 @@ public class OglBuffer extends AbstractOglObject {
     }
 
     public void bind() {
-        GL20.glBindBuffer(type.getValue(), id);
+        GL20.glBindBuffer(type.constant, id);
     }
 
 }

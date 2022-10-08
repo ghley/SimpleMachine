@@ -1,10 +1,11 @@
 package dev.simplemachine.opengl.objects;
 
-import org.lwjgl.opengl.GL20;
+import dev.simplemachine.opengl.glenum.QueryType;
+import org.lwjgl.opengl.GL45;
 
 public class OglQuery extends AbstractOglObject{
 
-    public OglQuery() {
-        super(GL20.glGenQueries());
+    public OglQuery(QueryType queryType) {
+        super(GL45.glCreateQueries(queryType.constant));
     }
 }

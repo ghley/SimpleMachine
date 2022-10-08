@@ -4,15 +4,15 @@ import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.objects.OglProgram;
 import dev.simplemachine.opengl.objects.OglShader;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-public class ProgramBuilder {
-
-    private OglProgram oglProgram;
-
-    private Set<OglShader> shaders = new HashSet<>();
+public final class ProgramBuilder {
+    private OglProgram program;
+    private Map<ShaderType, String> shaderSrc = new HashMap<>();
 
     private ProgramBuilder() {
     }
@@ -21,38 +21,46 @@ public class ProgramBuilder {
         return new ProgramBuilder();
     }
 
-    public ProgramBuilder useProgram(OglProgram oglProgram) {
-        this.oglProgram = oglProgram;
+    public ProgramBuilder useProgram(OglProgram program) {
+        this.program = program;
         return this;
-    }
-
-    public ProgramBuilder newProgram() {
-        return useProgram(new OglProgram());
     }
 
     public ProgramBuilder attach(ShaderType type, String shader) {
-        var obj = new OglShader(type);
-        if (obj.compile(shader)) {
-            oglProgram.addShader(obj);
-            shaders.add(obj);
+        shaderSrc.put(type, shader);
+        return this;
+    }
+
+    public OglProgram build() {
+        OglProgram oglProgram = program;
+        if (program == null) {
+            oglProgram = new OglProgram();
+        }
+
+        Set<OglShader> shadersToDelete = new HashSet<>();
+        for (var entry : shaderSrc.entrySet()) {
+            var shader = new OglShader(entry.getKey());
+            if (!shader.compile(entry.getValue())) {
+                Logger.getAnonymousLogger().info("Compilation failed: "+shader.getInfoLog());
+                shader.delete();
+            }else {
+                shadersToDelete.add(shader);
+                oglProgram.addShader(shader);
+            }
+        }
+
+        if (!oglProgram.link()) {
+            Logger.getAnonymousLogger().info("Linking failed: "+oglProgram.getInfoLog());
+            shadersToDelete.forEach(OglShader::delete);
+            if (program != null) {
+                return program;
+            }else {
+                oglProgram.delete();
+                return null;
+            }
         }else {
-            Logger.getGlobal()
-                    .severe("Failed to compile: "+shader+"\n\nWith error: "+obj.getInfoLog());
-            obj.delete();
+            shadersToDelete.forEach(OglShader::delete);
+            return oglProgram;
         }
-        return this;
-    }
-
-    public ProgramBuilder link() {
-        if (oglProgram.link()) {
-
-        }
-        return this;
-    }
-
-    public Program build() {
-        var program = new Program();
-        program.setOglProgram(oglProgram);
-        return program;
     }
 }

@@ -1,9 +1,9 @@
 package dev.simplemachine.opengl.objects;
 
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL45;
 
 public class OglFramebuffer extends AbstractOglObject{
     public OglFramebuffer() {
-        super(GL30.glGenFramebuffers());
+        super(GL45.glCreateFramebuffers());
     }
 }

@@ -2,6 +2,12 @@ package dev.simplemachine.opengl.objects;
 
 import org.lwjgl.opengl.GL43;
 
+
+/**
+ * Object wrappers for all OpenGL Objects, low level
+ *
+ * Every Object has a unique ID, so we can implement hash and equals easily
+ */
 public abstract class AbstractOglObject {
     protected final int id;
 

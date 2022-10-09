@@ -1,37 +1,65 @@
 package dev.simplemachine.opengl.objects;
 
-import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.BufferType;
+import dev.simplemachine.opengl.glenum.DataType;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL45;
 
 import java.util.Arrays;
 
 public class OglBuffer extends AbstractOglObject {
 
-    private int size = -1;
-    private BufferType bufferType;
+    private final int num;
+    private final int[] sizes;
+    private final int[] offset;
+    private final int stride;
+    private final DataType dataType;
+    private final BufferType bufferType;
 
-    public OglBuffer(BufferType type, int size, BufferStorageType... flags) {
+    public OglBuffer(BufferType bufferType, DataType dataType, int num, int[] sizes, int flags) {
         super(GL45.glCreateBuffers());
-        this.size = size;
-        this.bufferType = type;
-        GL45.glNamedBufferStorage(type.constant, size, Arrays.stream(flags)
-                .mapToInt(BufferStorageType::getConstant)
-                .reduce(0, (a,b)->a|b));
+        this.bufferType = bufferType;
+        this.num = num;
+        this.sizes = sizes;
+        this.dataType = dataType;
+        this.offset = new int[sizes.length];
+        for (int q = 0; q < offset.length - 1; q++) {
+            offset[q+1] = offset[q]+sizes[q];
+        }
+        stride = Arrays.stream(sizes).sum() * dataType.bitSize / 8;
+
+        GL45.glNamedBufferStorage(id, num * stride, flags);
     }
 
-    public OglBuffer(BufferType type, int size, int flags) {
-        super(GL45.glCreateBuffers());
-        this.bufferType = type;
-        this.size = size;
-        GL45.glNamedBufferStorage(type.constant, size, flags);
+    public void setData(float[] data) {
+        GL45.glNamedBufferSubData(id, 0, data);
     }
 
-    public int getSize() {
-        return size;
+    public void bind() {
+        GL20.glBindBuffer(bufferType.constant, id);
+    }
+
+    public int getNum() {
+        return num;
+    }
+
+    public int getStride() {
+        return stride;
+    }
+
+    public DataType getDataType() {
+        return dataType;
     }
 
     public BufferType getBufferType() {
         return bufferType;
+    }
+
+    public int[] getSizes() {
+        return sizes;
+    }
+
+    public int getOffset(int subEntry) {
+        return offset[subEntry];
     }
 }

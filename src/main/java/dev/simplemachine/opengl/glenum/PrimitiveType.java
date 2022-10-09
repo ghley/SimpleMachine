@@ -11,7 +11,7 @@ public enum PrimitiveType {
     TRIANGLE_STRIP(GL11.GL_TRIANGLE_STRIP),
     TRIANGLE_FAN(GL11.GL_TRIANGLE_FAN);
 
-    final int constant;
+    public final int constant;
 
     PrimitiveType(int constant) {
         this.constant = constant;

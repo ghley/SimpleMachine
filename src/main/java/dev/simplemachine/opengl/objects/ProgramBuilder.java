@@ -1,8 +1,6 @@
-package dev.simplemachine.opengl;
+package dev.simplemachine.opengl.objects;
 
 import dev.simplemachine.opengl.glenum.ShaderType;
-import dev.simplemachine.opengl.objects.OglProgram;
-import dev.simplemachine.opengl.objects.OglShader;
 
 import java.util.HashMap;
 import java.util.HashSet;

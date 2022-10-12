@@ -1,12 +1,8 @@
 package dev.simplemachine.examples;
 
 import dev.simplemachine.SimpleMachine;
-import dev.simplemachine.opengl.BufferBuilder;
-import dev.simplemachine.opengl.ProgramBuilder;
+import dev.simplemachine.opengl.objects.*;
 import dev.simplemachine.opengl.glenum.*;
-import dev.simplemachine.opengl.objects.OglProgram;
-import dev.simplemachine.opengl.objects.OglVertexArray;
-import org.lwjgl.opengl.GL11;
 
 public class Example002DrawTriangles {
     public static void main(String[] args) {
@@ -17,6 +13,7 @@ public class Example002DrawTriangles {
     }
 
     static OglProgram program;
+    static OglVertexArray vao;
 
     public static void init() {
         String vert = """
@@ -46,16 +43,12 @@ public class Example002DrawTriangles {
         };
 
 
-        var buffer = BufferBuilder.newInstance()
-                .addVertexSubSize(2)
-                .bufferType(BufferType.ARRAY_BUFFER)
-                .numberOfEntries(6)
-                .dataType(DataType.FLOAT)
-                .flag(BufferStorageType.DYNAMIC_STORAGE)
+        vao = VertexArrayBuilder.newInstance()
+                .setElementArraySize(6)
+                .addVariableField(new VertexAttribute(DataType.FLOAT, 2, 0))
+                .numVertices(6)
                 .build();
-        buffer.bind();
-        buffer.setData(vertex);
-
+        vao.setData(0, vertex);
 
         program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vert)
@@ -67,5 +60,6 @@ public class Example002DrawTriangles {
 
     public static void loop() {
         program.use();
+        vao.draw();
     }
 }

@@ -18,4 +18,7 @@ public abstract class AbstractOglObject {
     public int getId() {
         return id;
     }
+
+    public void destroy() {
+    }
 }

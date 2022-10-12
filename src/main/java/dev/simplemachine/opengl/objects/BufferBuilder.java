@@ -1,9 +1,8 @@
-package dev.simplemachine.opengl;
+package dev.simplemachine.opengl.objects;
 
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.BufferType;
 import dev.simplemachine.opengl.glenum.DataType;
-import dev.simplemachine.opengl.objects.OglBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +10,16 @@ import java.util.logging.Logger;
 
 public final class BufferBuilder {
 
+    private record SizeIndexPair(int size, int index) {
+
+    }
+
     private BufferType bufferType;
     private DataType dataType;
     private int flags = 0;
     private int num = 0;
 
-    private List<Integer> sizes = new ArrayList<>();
+    private List<SizeIndexPair> sizeIndexPairs = new ArrayList<>();
 
     private BufferBuilder() {
 
@@ -48,14 +51,16 @@ public final class BufferBuilder {
         return this;
     }
 
-    public BufferBuilder addVertexSubSize(int num) {
-        sizes.add(num);
+    public BufferBuilder addVertexSubSize(int num, int index) {
+        sizeIndexPairs.add(new SizeIndexPair(num, index));
         return this;
     }
 
     public OglBuffer build() {
         Logger.getAnonymousLogger().info("Creating new Buffer: "+toString());
-        var buffer = new OglBuffer(bufferType, dataType, num, sizes.stream().mapToInt(i->i).toArray(), flags);
+        var sizeArray = sizeIndexPairs.stream().mapToInt(SizeIndexPair::size).toArray();
+        var indexArray = sizeIndexPairs.stream().mapToInt(SizeIndexPair::index).toArray();
+        var buffer = new OglBuffer(bufferType, dataType, num, sizeArray, indexArray, flags);
         return buffer;
     }
 
@@ -66,7 +71,7 @@ public final class BufferBuilder {
                 ", dataType=" + dataType +
                 ", flags=" + flags +
                 ", num=" + num +
-                ", sizes=" + sizes +
+                ", sizeIndexPairs=" + sizeIndexPairs +
                 '}';
     }
 }

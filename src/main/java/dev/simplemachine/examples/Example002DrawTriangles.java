@@ -42,13 +42,13 @@ public class Example002DrawTriangles {
                 -0.85f, 0.9f
         };
 
-
         vao = VertexArrayBuilder.newInstance()
-                .setElementArraySize(6)
-                .addVariableField(new VertexAttribute(DataType.FLOAT, 2, 0))
+                .elementArray(6)
+                .addStaticField(new VertexAttribute(DataType.FLOAT, 2, 0))
                 .numVertices(6)
                 .build();
         vao.setData(0, vertex);
+        vao.setElementArray(new int[]{0, 1, 2, 3, 4, 5});
 
         program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vert)

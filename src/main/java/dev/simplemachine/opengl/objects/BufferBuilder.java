@@ -14,12 +14,11 @@ public final class BufferBuilder {
 
     }
 
-    private BufferType bufferType;
     private DataType dataType;
     private int flags = 0;
     private int num = 0;
-
-    private List<SizeIndexPair> sizeIndexPairs = new ArrayList<>();
+    private BufferType bufferType;
+    private List<Integer> sizes = new ArrayList<>();
 
     private BufferBuilder() {
 
@@ -51,27 +50,37 @@ public final class BufferBuilder {
         return this;
     }
 
-    public BufferBuilder addVertexSubSize(int num, int index) {
-        sizeIndexPairs.add(new SizeIndexPair(num, index));
+    public BufferBuilder addVertexSubSize(int num) {
+        sizes.add(num);
         return this;
+    }
+
+    public BufferBuilder elementArray() {
+        bufferType = BufferType.ELEMENT_ARRAY_BUFFER;
+        return addVertexSubSize(1);
     }
 
     public OglBuffer build() {
         Logger.getAnonymousLogger().info("Creating new Buffer: "+toString());
-        var sizeArray = sizeIndexPairs.stream().mapToInt(SizeIndexPair::size).toArray();
-        var indexArray = sizeIndexPairs.stream().mapToInt(SizeIndexPair::index).toArray();
-        var buffer = new OglBuffer(bufferType, dataType, num, sizeArray, indexArray, flags);
+
+        boolean allSet = dataType != null && num > 0 && !sizes.isEmpty();
+        if (!allSet) {
+            throw new RuntimeException("Missing params.");
+        }
+
+        var sizeArray = sizes.stream().mapToInt(i->i).toArray();
+        var buffer = new OglBuffer(bufferType, dataType, num, sizeArray, flags);
         return buffer;
     }
 
     @Override
     public String toString() {
         return "BufferBuilder{" +
-                "bufferType=" + bufferType +
-                ", dataType=" + dataType +
+                "dataType=" + dataType +
                 ", flags=" + flags +
                 ", num=" + num +
-                ", sizeIndexPairs=" + sizeIndexPairs +
+                ", bufferType=" + bufferType +
+                ", sizes=" + sizes +
                 '}';
     }
 }

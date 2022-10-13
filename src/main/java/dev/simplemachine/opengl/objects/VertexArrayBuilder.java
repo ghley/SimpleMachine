@@ -1,11 +1,13 @@
 package dev.simplemachine.opengl.objects;
 
 import dev.simplemachine.opengl.glenum.BufferStorageType;
+import dev.simplemachine.opengl.glenum.BufferType;
 import dev.simplemachine.opengl.glenum.DataType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class VertexArrayBuilder {
@@ -38,25 +40,27 @@ public class VertexArrayBuilder {
         return this;
     }
 
-    public VertexArrayBuilder setElementArraySize(int size) {
+    public VertexArrayBuilder elementArray(int size) {
         elementArraySize = size;
         return this;
     }
 
     public OglVertexArray build() {
+        Logger.getAnonymousLogger().info("Creating new VertexArray: "+toString());
         var vao = new OglVertexArray();
 
         var staticMap = staticFields.stream()
                 .collect(Collectors.groupingBy(VertexAttribute::type));
         for (var entry : staticMap.entrySet()) {
             var builder = BufferBuilder.newInstance()
+                    .bufferType(BufferType.ARRAY_BUFFER)
                     .dataType(entry.getKey())
                     .numberOfEntries(num)
                     .flag(BufferStorageType.DYNAMIC_STORAGE);
             for (var subEntry : entry.getValue()) {
-                builder.addVertexSubSize(subEntry.size(), subEntry.binding());
+                builder.addVertexSubSize(subEntry.size());
             }
-            vao.addBuffer(builder.build());
+            vao.addBuffer(builder.build(), entry.getValue().stream().mapToInt(e->e.binding()).toArray());
         }
 
         var variableMap = variableFields.stream()
@@ -64,24 +68,38 @@ public class VertexArrayBuilder {
         for (var entry : variableMap.entrySet()) {
             for (var subEntry : entry.getValue()) {
                 var builder = BufferBuilder.newInstance()
+                        .bufferType(BufferType.ARRAY_BUFFER)
                         .dataType(entry.getKey())
                         .numberOfEntries(num)
                         .flag(BufferStorageType.DYNAMIC_STORAGE);
-                builder.addVertexSubSize(subEntry.size(), subEntry.binding());
-                vao.addBuffer(builder.build());
+                builder.addVertexSubSize(subEntry.size());
+                vao.addBuffer(builder.build(), subEntry.binding());
             }
         }
 
         if (elementArraySize > 0) {
             var elemBuffer = BufferBuilder.newInstance()
+                    .bufferType(BufferType.ELEMENT_ARRAY_BUFFER)
                     .dataType(DataType.U_INT)
+                    .flag(BufferStorageType.DYNAMIC_STORAGE)
                     .numberOfEntries(elementArraySize)
+                    .elementArray()
                     .build();
             vao.addElementBuffer(elemBuffer);
         }
 
+        System.out.println(vao);
+
         return vao;
     }
 
-
+    @Override
+    public String toString() {
+        return "VertexArrayBuilder{" +
+                "staticFields=" + staticFields +
+                ", variableFields=" + variableFields +
+                ", num=" + num +
+                ", elementArraySize=" + elementArraySize +
+                '}';
+    }
 }

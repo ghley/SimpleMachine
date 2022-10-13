@@ -2,7 +2,6 @@ package dev.simplemachine.opengl.objects;
 
 import dev.simplemachine.opengl.glenum.BufferType;
 import dev.simplemachine.opengl.glenum.DataType;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL45;
 
 import java.util.Arrays;
@@ -12,17 +11,15 @@ public class OglBuffer extends AbstractOglObject {
     private final int num;
     private final int[] sizes;
     private final int[] offset;
-    private final int[] bindingIndices;
     private final int stride;
     private final DataType dataType;
     private final BufferType bufferType;
 
-    public OglBuffer(BufferType bufferType, DataType dataType, int num, int[] sizes, int[] indices, int flags) {
+    public OglBuffer(BufferType bufferType, DataType dataType, int num, int[] sizes, int flags) {
         super(GL45.glCreateBuffers());
         this.bufferType = bufferType;
         this.num = num;
         this.sizes = sizes;
-        this.bindingIndices = indices;
         this.dataType = dataType;
         this.offset = new int[sizes.length];
         for (int q = 0; q < offset.length - 1; q++) {
@@ -31,13 +28,16 @@ public class OglBuffer extends AbstractOglObject {
         stride = Arrays.stream(sizes).sum();
 
         GL45.glNamedBufferStorage(id, num * stride * dataType.bitSize / 8, flags);
+        System.out.println(toString());
     }
 
     public void setData(float[] data) {
+        System.out.println("Setting: "+Arrays.toString(data)+" for "+id);
         GL45.glNamedBufferSubData(id, 0, data);
     }
 
     public void setData(int[] data) {
+        System.out.println("Setting: "+Arrays.toString(data)+" for "+id);
         GL45.glNamedBufferSubData(id, 0, data);
     }
 
@@ -65,7 +65,16 @@ public class OglBuffer extends AbstractOglObject {
         return offset[subEntry];
     }
 
-    public int[] getBindingIndices() {
-        return bindingIndices;
+    @Override
+    public String toString() {
+        return "OglBuffer{" +
+                "id=" + id +
+                ", num=" + num +
+                ", sizes=" + Arrays.toString(sizes) +
+                ", offset=" + Arrays.toString(offset) +
+                ", stride=" + stride +
+                ", dataType=" + dataType +
+                ", bufferType=" + bufferType +
+                '}';
     }
 }

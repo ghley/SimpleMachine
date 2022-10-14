@@ -1,5 +1,6 @@
 package dev.simplemachine.opengl.objects;
 
+import dev.simplemachine.opengl.glenum.PrimitiveType;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL45;
 
@@ -20,9 +21,10 @@ public class OglVertexArray extends AbstractOglObject {
 
     private OglBuffer elementBuffer;
 
+    private PrimitiveType primitiveType;
+
     public OglVertexArray() {
         super(GL45.glCreateVertexArrays());
-        System.out.println(this);
     }
 
     public void bind() {
@@ -33,9 +35,6 @@ public class OglVertexArray extends AbstractOglObject {
         int stride = buffer.getStride() * buffer.getDataType().bitSize / 8;
         for (int q = 0; q < buffer.getSizes().length; q++) {
             int binding = bindingIndices[q];
-            System.out.println(String.format(
-                    "Binding: %d to %d with offset %d, stride %d and size %d", buffer.id, binding,
-                    buffer.getOffset(q), stride, buffer.getSizes()[q]));
             map.put(binding, new BufferSubEntryPair(buffer, q));
             glVertexArrayVertexBuffer(id, binding, buffer.id , buffer.getOffset(q), stride);
             glVertexArrayAttribFormat(id, binding, buffer.getSizes()[q], buffer.getDataType().constant,
@@ -62,15 +61,18 @@ public class OglVertexArray extends AbstractOglObject {
         elementBuffer.setData(data);
     }
 
+    public void setPrimitiveType(PrimitiveType primitiveType) {
+        this.primitiveType = primitiveType;
+    }
 
-    public void draw() {
+    public void drawArrays(int num) {
         bind();
-        // FIXME should be way prettier
-        if (elementBuffer != null) {
-            glDrawElements(GL_TRIANGLES, elementBuffer.getNum(), GL_UNSIGNED_INT, 0);
-        }else {
-            glDrawArrays(GL_TRIANGLES, 0, map.values().stream().findFirst().get().buffer.getNum());
-        }
+        glDrawArrays(primitiveType.constant, 0, map.values().stream().findFirst().get().buffer.getNum());
+    }
+
+    public void drawElements(int num) {
+        bind();
+        glDrawElements(primitiveType.constant, elementBuffer.getNum(), GL_UNSIGNED_INT, 0);
     }
 
     @Override

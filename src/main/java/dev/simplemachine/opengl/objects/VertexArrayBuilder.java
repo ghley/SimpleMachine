@@ -3,6 +3,7 @@ package dev.simplemachine.opengl.objects;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.BufferType;
 import dev.simplemachine.opengl.glenum.DataType;
+import dev.simplemachine.opengl.glenum.PrimitiveType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,8 @@ public class VertexArrayBuilder {
     private int num;
 
     private int elementArraySize = 0;
+
+    private PrimitiveType type;
 
     public static VertexArrayBuilder newInstance() {
         return new VertexArrayBuilder();
@@ -42,6 +45,11 @@ public class VertexArrayBuilder {
 
     public VertexArrayBuilder elementArray(int size) {
         elementArraySize = size;
+        return this;
+    }
+
+    public VertexArrayBuilder primitiveType(PrimitiveType type) {
+        this.type = type;
         return this;
     }
 
@@ -88,8 +96,7 @@ public class VertexArrayBuilder {
             vao.addElementBuffer(elemBuffer);
         }
 
-        System.out.println(vao);
-
+        vao.setPrimitiveType(type);
         return vao;
     }
 

@@ -1,4 +1,4 @@
-package dev.simplemachine.examples;
+package dev.simplemachine.opengl.examples;
 
 import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.opengl.objects.*;
@@ -46,6 +46,7 @@ public class Example002DrawTriangles {
                 .elementArray(6)
                 .addStaticField(new VertexAttribute(DataType.FLOAT, 2, 0))
                 .numVertices(6)
+                .primitiveType(PrimitiveType.TRIANGLES)
                 .build();
         vao.setData(0, vertex);
         vao.setElementArray(new int[]{0, 1, 2, 3, 4, 5});
@@ -60,6 +61,6 @@ public class Example002DrawTriangles {
 
     public static void loop() {
         program.use();
-        vao.draw();
+        vao.drawElements(6);
     }
 }

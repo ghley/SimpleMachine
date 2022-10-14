@@ -61,8 +61,6 @@ public final class BufferBuilder {
     }
 
     public OglBuffer build() {
-        Logger.getAnonymousLogger().info("Creating new Buffer: "+toString());
-
         boolean allSet = dataType != null && num > 0 && !sizes.isEmpty();
         if (!allSet) {
             throw new RuntimeException("Missing params.");

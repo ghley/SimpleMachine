@@ -28,16 +28,13 @@ public class OglBuffer extends AbstractOglObject {
         stride = Arrays.stream(sizes).sum();
 
         GL45.glNamedBufferStorage(id, num * stride * dataType.bitSize / 8, flags);
-        System.out.println(toString());
     }
 
     public void setData(float[] data) {
-        System.out.println("Setting: "+Arrays.toString(data)+" for "+id);
         GL45.glNamedBufferSubData(id, 0, data);
     }
 
     public void setData(int[] data) {
-        System.out.println("Setting: "+Arrays.toString(data)+" for "+id);
         GL45.glNamedBufferSubData(id, 0, data);
     }
 

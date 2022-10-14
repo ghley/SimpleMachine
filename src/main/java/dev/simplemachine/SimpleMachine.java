@@ -76,6 +76,12 @@ public class SimpleMachine {
             GLFW.glfwSwapBuffers(window);
 
             GLFW.glfwPollEvents();
+            // FIXME for now fixed time step
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

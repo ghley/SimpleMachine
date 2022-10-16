@@ -1,5 +1,6 @@
 package dev.simplemachine.opengl.objects;
 
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
@@ -62,5 +63,9 @@ public class OglProgram extends AbstractOglObject {
 
     public void setUniform(String name, Vector2f vec2) {
         GL20.glUniform2f(getLocation(name), vec2.x, vec2.y);
+    }
+
+    public void setUniform(String name, Matrix4f matrix) {
+        GL20.glUniformMatrix4fv(getLocation(name), false, matrix.get(new float[16])); // FIXME GC might not like this
     }
 }

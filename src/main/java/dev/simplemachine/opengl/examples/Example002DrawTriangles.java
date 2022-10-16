@@ -62,6 +62,6 @@ public class Example002DrawTriangles {
 
     public static void loop() {
         program.use();
-        vao.drawArrays(6);
+        vao.drawArrays();
     }
 }

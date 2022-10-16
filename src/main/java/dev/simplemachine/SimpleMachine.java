@@ -1,6 +1,7 @@
 package dev.simplemachine;
 
 import dev.simplemachine.ecs.ECS;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -16,6 +17,8 @@ public class SimpleMachine {
     private Runnable initCallback = ()->{};
 
     private Runnable loopCallback = ()->{};
+
+    private final Vector2i dimension = new Vector2i();
     public void run() {
         init();
         initCallback.run();
@@ -37,6 +40,9 @@ public class SimpleMachine {
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
 
         window = GLFW.glfwCreateWindow(1024, 786, "Simple Machine", 0, 0);
+        dimension.x = 1024;
+        dimension.y = 786;
+
         if (window == 0) {
             throw new RuntimeException("glfwCreateWindow() failed");
         }
@@ -101,5 +107,9 @@ public class SimpleMachine {
 
     public void setLoopCallback(Runnable loopCallback) {
         this.loopCallback = loopCallback;
+    }
+
+    public Vector2i getDimension() {
+        return dimension;
     }
 }

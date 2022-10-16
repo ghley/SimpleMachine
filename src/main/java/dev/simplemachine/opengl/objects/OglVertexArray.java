@@ -58,14 +58,30 @@ public class OglVertexArray extends AbstractOglObject {
         this.primitiveType = primitiveType;
     }
 
-    public void drawArrays(int num) {
+    public void drawArrays() {
         bind();
         glDrawArrays(primitiveType.constant, 0, map.values().stream().findFirst().get().buffer.getNum());
     }
 
-    public void drawElements(int num) {
+
+    public void drawArrays(int offset) {
+        bind();
+        glDrawArrays(primitiveType.constant, offset, map.values().stream().findFirst().get().buffer.getNum());
+    }
+
+    public void drawElements() {
         bind();
         glDrawElements(primitiveType.constant, elementBuffer.getNum(), GL_UNSIGNED_INT, 0);
+    }
+
+    public void drawElementsBaseVertex(int num, int baseVertex) {
+        bind();
+        GL45.glDrawElementsBaseVertex(primitiveType.constant, num, GL_UNSIGNED_INT, 0, baseVertex);
+    }
+
+    public void drawArraysInstanced(int first, int num, int numInstances) {
+        bind();
+        GL45.glDrawArraysInstanced(primitiveType.constant, first, num, numInstances);
     }
 
     public List<OglBuffer> getBuffers() {

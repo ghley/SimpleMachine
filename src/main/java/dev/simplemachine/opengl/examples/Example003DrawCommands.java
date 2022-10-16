@@ -5,13 +5,19 @@ import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.objects.*;
+import org.joml.Matrix4f;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.system.MemoryStack;
 
 import java.util.Arrays;
 
 public class Example003DrawCommands {
 
+    static SimpleMachine machine;
+
     public static void main(String[] args) {
-        var machine = new SimpleMachine();
+        machine = new SimpleMachine();
         machine.setInitCallback(Example003DrawCommands::init);
         machine.setLoopCallback(Example003DrawCommands::loop);
         machine.run();
@@ -19,6 +25,7 @@ public class Example003DrawCommands {
 
     static OglProgram program;
     static OglVertexArray vao;
+    static Matrix4f model;
 
     public static void init() {
         String vert = """
@@ -81,21 +88,40 @@ public class Example003DrawCommands {
                 .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 0)) //position
                 .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 1)) //color
                 .primitiveType(PrimitiveType.TRIANGLES)
-                .numVertices(3)
+                .numVertices(4)
                 .build();
         vao.setSubData(0, vertices);
         vao.setSubData(1, colors);
+        vao.getElementBuffer().setData(indices);
 
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
 
-        for (var buff : vao.getBuffers()) {
-            System.out.println(Arrays.toString(buff.getDataFv()));
-        }
+        float aspect = machine.getDimension().y / (float)machine.getDimension().x;
 
+        var proj = new Matrix4f().frustum(-1,1,-aspect, aspect, 1.f, 500f);
 
+        program.setUniform("projection_matrix", proj);
     }
 
 
     public static void loop() {
+        program.use();
 
+        model = new Matrix4f().translate(-3, 0, -5);
+        program.setUniform("model_matrix", model);
+        vao.drawArrays();
+
+        model = new Matrix4f().translate(-1, 0, -5);
+        program.setUniform("model_matrix", model);
+        vao.drawElements();
+
+        model = new Matrix4f().translate(1, 0, -5);
+        program.setUniform("model_matrix", model);
+        vao.drawElementsBaseVertex(3, 1);
+
+        model = new Matrix4f().translate(3, 0, -5);
+        program.setUniform("model_matrix", model);
+        vao.drawArraysInstanced(0, 3, 1);
     }
 }

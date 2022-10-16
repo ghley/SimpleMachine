@@ -20,6 +20,8 @@ public final class BufferBuilder {
     private BufferType bufferType;
     private List<Integer> sizes = new ArrayList<>();
 
+    private boolean interleaved = false;
+
     private BufferBuilder() {
 
     }
@@ -60,6 +62,11 @@ public final class BufferBuilder {
         return addVertexSubSize(1);
     }
 
+    public BufferBuilder interleaved() {
+        interleaved = true;
+        return this;
+    }
+
     public OglBuffer build() {
         boolean allSet = dataType != null && num > 0 && !sizes.isEmpty();
         if (!allSet) {
@@ -67,7 +74,7 @@ public final class BufferBuilder {
         }
 
         var sizeArray = sizes.stream().mapToInt(i->i).toArray();
-        var buffer = new OglBuffer(bufferType, dataType, num, sizeArray, flags);
+        var buffer = new OglBuffer(bufferType, dataType, num, sizeArray, flags, interleaved);
         return buffer;
     }
 

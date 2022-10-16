@@ -1,9 +1,12 @@
 package dev.simplemachine.opengl.examples;
 
 import dev.simplemachine.SimpleMachine;
+import dev.simplemachine.opengl.glenum.DataType;
+import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.ShaderType;
-import dev.simplemachine.opengl.objects.OglProgram;
-import dev.simplemachine.opengl.objects.ProgramBuilder;
+import dev.simplemachine.opengl.objects.*;
+
+import java.util.Arrays;
 
 public class Example003DrawCommands {
 
@@ -15,6 +18,7 @@ public class Example003DrawCommands {
     }
 
     static OglProgram program;
+    static OglVertexArray vao;
 
     public static void init() {
         String vert = """
@@ -48,11 +52,44 @@ public class Example003DrawCommands {
                 }
                 """;
 
+        float[] vertices = new float[] {
+                -1.0f, -1.0f,  0.0f, 1.0f,
+                1.0f, -1.0f,  0.0f, 1.0f,
+                -1.0f,  1.0f,  0.0f, 1.0f,
+                -1.0f, -1.0f,  0.0f, 1.0f
+        };
+
+        float[] colors = new float[] {
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 1.0f, 1.0f,
+                0.0f, 1.0f, 1.0f, 1.0f
+        };
+
+        int[] indices = new int[] {
+                0,1,2
+        };
+
         program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vert)
                 .attach(ShaderType.FRAGMENT_SHADER, frag)
                 .build();
         program.use();
+
+        vao = VertexArrayBuilder.newInstance()
+                .elementArray(indices.length)
+                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 0)) //position
+                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 1)) //color
+                .primitiveType(PrimitiveType.TRIANGLES)
+                .numVertices(3)
+                .build();
+        vao.setSubData(0, vertices);
+        vao.setSubData(1, colors);
+
+
+        for (var buff : vao.getBuffers()) {
+            System.out.println(Arrays.toString(buff.getDataFv()));
+        }
 
 
     }

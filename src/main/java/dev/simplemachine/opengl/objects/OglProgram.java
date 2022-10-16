@@ -1,9 +1,15 @@
 package dev.simplemachine.opengl.objects;
 
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class OglProgram extends AbstractOglObject {
+    private Map<String, Integer> locations = new HashMap<>();
 
     public OglProgram() {
         super(GL20.glCreateProgram());
@@ -36,5 +42,25 @@ public class OglProgram extends AbstractOglObject {
 
     public String getInfoLog() {
         return GL20.glGetProgramInfoLog(id);
+    }
+
+    int getLocation(String name) {
+        if (!locations.containsKey(name)) {
+            int location = GL20.glGetUniformLocation(id, name);
+            locations.put(name, location);
+        }
+        return locations.get(name);
+    }
+
+    public void setUniform(String name, float scalar) {
+        GL20.glUniform1f(getLocation(name), scalar);
+    }
+
+    public void setUniform(String name, Vector3f vec3) {
+        GL20.glUniform3f(getLocation(name), vec3.x, vec3.y, vec3.z);
+    }
+
+    public void setUniform(String name, Vector2f vec2) {
+        GL20.glUniform2f(getLocation(name), vec2.x, vec2.y);
     }
 }

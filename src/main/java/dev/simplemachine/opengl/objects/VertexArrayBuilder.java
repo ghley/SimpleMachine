@@ -24,6 +24,8 @@ public class VertexArrayBuilder {
 
     private PrimitiveType type;
 
+    private boolean interleaved = false;
+
     public static VertexArrayBuilder newInstance() {
         return new VertexArrayBuilder();
     }
@@ -35,6 +37,11 @@ public class VertexArrayBuilder {
 
     public VertexArrayBuilder addStaticField(VertexAttribute attribute) {
         staticFields.add(attribute);
+        return this;
+    }
+
+    public VertexArrayBuilder interleaved() {
+        interleaved = true;
         return this;
     }
 
@@ -97,6 +104,8 @@ public class VertexArrayBuilder {
         }
 
         vao.setPrimitiveType(type);
+
+        Logger.getAnonymousLogger().info("VertexArray: "+vao);
         return vao;
     }
 

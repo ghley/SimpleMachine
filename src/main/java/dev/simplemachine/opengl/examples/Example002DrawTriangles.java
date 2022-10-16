@@ -4,6 +4,8 @@ import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.opengl.objects.*;
 import dev.simplemachine.opengl.glenum.*;
 
+import java.util.Arrays;
+
 public class Example002DrawTriangles {
     public static void main(String[] args) {
         var machine = new SimpleMachine();
@@ -49,18 +51,17 @@ public class Example002DrawTriangles {
                 .primitiveType(PrimitiveType.TRIANGLES)
                 .build();
         vao.setData(0, vertex);
-        vao.setElementArray(new int[]{0, 1, 2, 3, 4, 5});
+        vao.getElementBuffer().setData(new int[]{0, 1, 2, 3, 4, 5});
 
         program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vert)
                 .attach(ShaderType.FRAGMENT_SHADER, frag)
                 .build();
         program.use();
-
     }
 
     public static void loop() {
         program.use();
-        vao.drawElements(6);
+        vao.drawArrays(6);
     }
 }

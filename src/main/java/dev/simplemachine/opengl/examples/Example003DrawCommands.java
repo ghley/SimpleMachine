@@ -1,14 +1,14 @@
 package dev.simplemachine.opengl.examples;
 
 import dev.simplemachine.SimpleMachine;
-import dev.simplemachine.opengl.glenum.DataType;
-import dev.simplemachine.opengl.glenum.PrimitiveType;
+import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.ShaderType;
-import dev.simplemachine.opengl.objects.*;
+import dev.simplemachine.opengl.objects.BufferBuilder;
+import dev.simplemachine.opengl.objects.OglProgram;
+import dev.simplemachine.opengl.objects.OglVertexArray;
+import dev.simplemachine.opengl.objects.ProgramBuilder;
 import org.joml.Matrix4f;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.system.MemoryStack;
 
 import java.util.Arrays;
 
@@ -59,22 +59,22 @@ public class Example003DrawCommands {
                 }
                 """;
 
-        float[] vertices = new float[] {
-                -1.0f, -1.0f,  0.0f, 1.0f,
-                1.0f, -1.0f,  0.0f, 1.0f,
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                -1.0f, -1.0f,  0.0f, 1.0f
+        float[] vertices = new float[]{
+                -1.0f, -1.0f, 0.0f, 1.0f,
+                1.0f, -1.0f, 0.0f, 1.0f,
+                -1.0f, 1.0f, 0.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 1.0f
         };
 
-        float[] colors = new float[] {
+        float[] colors = new float[]{
                 1.0f, 1.0f, 1.0f, 1.0f,
                 1.0f, 1.0f, 0.0f, 1.0f,
                 1.0f, 0.0f, 1.0f, 1.0f,
                 0.0f, 1.0f, 1.0f, 1.0f
         };
 
-        int[] indices = new int[] {
-                0,1,2
+        int[] indices = new int[]{
+                0, 1, 2
         };
 
         program = ProgramBuilder.newInstance()
@@ -83,23 +83,33 @@ public class Example003DrawCommands {
                 .build();
         program.use();
 
-        vao = VertexArrayBuilder.newInstance()
-                .elementArray(indices.length)
-                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 0)) //position
-                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 1)) //color
-                .primitiveType(PrimitiveType.TRIANGLES)
-                .numVertices(4)
+
+        var buffer = BufferBuilder.newInstance()
+                .flag(BufferStorageType.DYNAMIC_STORAGE)
+                .byteLength(64 * 8)
                 .build();
-        vao.setSubData(0, vertices);
-        vao.setSubData(1, colors);
+        buffer.setData(0, vertices);
+        buffer.setData(4 * 4, colors);
+        System.out.println(Arrays.toString(buffer.getDataFv()));
+
+
+//        vao = VertexArrayBuilder.newInstance()
+//                .elementArray(indices.length)
+//                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 0)) //position
+//                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 1)) //color
+//                .primitiveType(PrimitiveType.TRIANGLES)
+//                .numVertices(4)
+//                .build();
+//        vao.setSubData(0, vertices);
+//        vao.setSubData(1, colors);
         vao.getElementBuffer().setData(indices);
 
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
 
-        float aspect = machine.getDimension().y / (float)machine.getDimension().x;
+        float aspect = machine.getDimension().y / (float) machine.getDimension().x;
 
-        var proj = new Matrix4f().frustum(-1,1,-aspect, aspect, 1.f, 500f);
+        var proj = new Matrix4f().frustum(-1, 1, -aspect, aspect, 1.f, 500f);
 
         program.setUniform("projection_matrix", proj);
     }
@@ -110,7 +120,7 @@ public class Example003DrawCommands {
 
         model = new Matrix4f().translate(-3, 0, -5);
         program.setUniform("model_matrix", model);
-        vao.drawArrays();
+//        vao.drawArrays();
 
         model = new Matrix4f().translate(-1, 0, -5);
         program.setUniform("model_matrix", model);

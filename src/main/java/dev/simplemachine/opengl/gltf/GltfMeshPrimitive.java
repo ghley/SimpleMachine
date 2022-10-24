@@ -1,4 +1,4 @@
-package dev.simplemachine.gltf;
+package dev.simplemachine.opengl.gltf;
 
 import java.util.Arrays;
 import java.util.Map;

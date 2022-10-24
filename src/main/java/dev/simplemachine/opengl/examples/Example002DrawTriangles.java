@@ -44,14 +44,27 @@ public class Example002DrawTriangles {
                 -0.85f, 0.9f
         };
 
-        vao = VertexArrayBuilder.newInstance()
-                .elementArray(6)
-                .addStaticField(new VertexAttribute(DataType.FLOAT, 2, 0))
-                .numVertices(6)
-                .primitiveType(PrimitiveType.TRIANGLES)
+        var buffer = BufferBuilder.newInstance()
+                .byteLength(vertex.length * 4)
+                .flag(BufferStorageType.DYNAMIC_STORAGE)
                 .build();
-        vao.setData(0, vertex);
-        vao.getElementBuffer().setData(new int[]{0, 1, 2, 3, 4, 5});
+        buffer.setData(vertex);
+
+        var elementBuffer = BufferBuilder.newInstance()
+                .byteLength(6 * 4)
+                .flag(BufferStorageType.DYNAMIC_STORAGE)
+                .build();
+        elementBuffer.setData(new int[] {0, 1, 2, 3, 4, 5});
+
+        vao = VertexArrayBuilder.newInstance()
+                .primitiveMode(PrimitiveType.TRIANGLES)
+                .addAccessor(0,
+                        new VertexArrayAccessor(buffer, 0, 8,  DataType.FLOAT, 2, false)
+                )
+                .addElementBuffer(
+                        new VertexArrayAccessor(elementBuffer, 0, 4, DataType.U_INT, 1, false)
+                )
+                .build();
 
         program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vert)
@@ -62,6 +75,6 @@ public class Example002DrawTriangles {
 
     public static void loop() {
         program.use();
-        vao.drawArrays();
+        vao.drawElements();
     }
 }

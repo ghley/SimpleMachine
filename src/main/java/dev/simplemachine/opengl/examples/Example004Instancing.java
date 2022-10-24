@@ -4,9 +4,14 @@ import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.BufferType;
 import dev.simplemachine.opengl.glenum.ShaderType;
+import dev.simplemachine.opengl.gltf.GLBLoader;
 import dev.simplemachine.opengl.objects.BufferBuilder;
 import dev.simplemachine.opengl.objects.OglProgram;
 import dev.simplemachine.opengl.objects.ProgramBuilder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Example004Instancing {
 
@@ -74,11 +79,12 @@ public class Example004Instancing {
                 .build();
         program.use();
 
-        var buffer = BufferBuilder.newInstance()
-                .bufferType(BufferType.ARRAY_BUFFER)
-                .flag(BufferStorageType.DYNAMIC_STORAGE);
-
-
+        byte[] data = null;
+        try {
+            data = Files.readAllBytes(Path.of("test.glb"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void loop() {

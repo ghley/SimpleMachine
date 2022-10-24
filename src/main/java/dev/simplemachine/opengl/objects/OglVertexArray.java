@@ -1,29 +1,21 @@
 package dev.simplemachine.opengl.objects;
 
+import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL45;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL45.*;
 
 public class OglVertexArray extends AbstractOglObject {
 
-    record BufferSubEntryPair(OglBuffer buffer, int subEntry) {
-
-    }
-
-    private Map<Integer, BufferSubEntryPair> map = new HashMap<>();
-
-    private OglBuffer elementBuffer;
-
     private PrimitiveType primitiveType;
+    private Map<Integer, VertexArrayAccessor> map = new HashMap<>();
+    private OglBuffer elementBuffer;
+    private DataType elementBufferType;
 
     public OglVertexArray() {
         super(GL45.glCreateVertexArrays());
@@ -33,23 +25,22 @@ public class OglVertexArray extends AbstractOglObject {
         GL30.glBindVertexArray(id);
     }
 
-    void addBuffer(OglBuffer buffer, int... bindingIndices) {
-        int stride = buffer.getStride() * buffer.getDataType().bitSize / 8;
-        for (int q = 0; q < buffer.getSizes().length; q++) {
-            if (!buffer.isInterleaved()) {
-                stride = buffer.getSizes()[q] * buffer.getDataType().bitSize / 8;
-            }
-            int binding = bindingIndices[q];
-            map.put(binding, new BufferSubEntryPair(buffer, q));
-            glVertexArrayVertexBuffer(id, binding, buffer.id, buffer.getOffset(q), stride);
-            glVertexArrayAttribFormat(id, binding, buffer.getSizes()[q], buffer.getDataType().constant,
-                    false, buffer.getOffset(q));
-            glVertexArrayAttribBinding(id, binding, binding);
-            glEnableVertexArrayAttrib(id, binding);
-        }
+    void addAccessor(int bindingIndex, VertexArrayAccessor accessor) {
+        map.put(bindingIndex, accessor);
+        var buffer = accessor.buffer();
+        var byteOffset = accessor.byteOffset();
+        var count = accessor.count();
+        var type = accessor.dataType();
+        var normalize = accessor.normalize();
+        var byteStride = accessor.byteStride();
+        glVertexArrayVertexBuffer(id, bindingIndex, buffer.id, byteOffset, byteStride);
+        glVertexArrayAttribFormat(id, bindingIndex, count, type.constant, normalize, byteOffset);
+        glVertexArrayAttribBinding(id, bindingIndex, bindingIndex);
+        glEnableVertexArrayAttrib(id, bindingIndex);
     }
 
-    void addElementBuffer(OglBuffer elementBuffer) {
+    void addElementBuffer(OglBuffer elementBuffer, DataType elementBufferType) {
+        this.elementBufferType = elementBufferType;
         this.elementBuffer = elementBuffer;
         glVertexArrayElementBuffer(id, elementBuffer.id);
     }
@@ -58,20 +49,9 @@ public class OglVertexArray extends AbstractOglObject {
         this.primitiveType = primitiveType;
     }
 
-    public void drawArrays() {
-        bind();
-        glDrawArrays(primitiveType.constant, 0, map.values().stream().findFirst().get().buffer.getNum());
-    }
-
-
-    public void drawArrays(int offset) {
-        bind();
-        glDrawArrays(primitiveType.constant, offset, map.values().stream().findFirst().get().buffer.getNum());
-    }
-
     public void drawElements() {
         bind();
-        glDrawElements(primitiveType.constant, elementBuffer.getNum(), GL_UNSIGNED_INT, 0);
+        glDrawElements(primitiveType.constant, elementBuffer.getByteLength() / DataType.U_INT.bitSize * 8, GL_UNSIGNED_INT, 0);
     }
 
     public void drawElementsBaseVertex(int num, int baseVertex) {
@@ -84,38 +64,7 @@ public class OglVertexArray extends AbstractOglObject {
         GL45.glDrawArraysInstanced(primitiveType.constant, first, num, numInstances);
     }
 
-    public List<OglBuffer> getBuffers() {
-        return map.values().stream().map(BufferSubEntryPair::buffer).collect(Collectors.toList());
-    }
-
-    public void setData(int binding, float[] data) {
-        map.get(binding).buffer.setData(data);
-    }
-
-    public void setData(int binding, int[] data) {
-        map.get(binding).buffer.setData(data);
-    }
-
-    public void setSubData(int binding, float[] data) {
-        var pair = map.get(binding);
-        pair.buffer.setSubData(pair.subEntry, data);
-    }
-
-    public void setSubData(int binding, int[] data) {
-        var pair = map.get(binding);
-        pair.buffer.setSubData(pair.subEntry, data);
-    }
-
     public OglBuffer getElementBuffer() {
         return elementBuffer;
-    }
-
-    @Override
-    public String toString() {
-        return "OglVertexArray{" +
-                "id=" + id +
-                ", map=" + map +
-                ", elementBuffer=" + elementBuffer +
-                '}';
     }
 }

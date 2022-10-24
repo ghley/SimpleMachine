@@ -1,7 +1,5 @@
-package dev.simplemachine.gltf;
+package dev.simplemachine.opengl.gltf;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Arrays;
 

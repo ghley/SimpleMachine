@@ -1,4 +1,4 @@
-package dev.simplemachine.gltf;
+package dev.simplemachine.opengl.gltf;
 
 class GltfOcclusionTextureInfo extends GltfTextureInfo {
     Number strength;

@@ -59,10 +59,10 @@ public class Example002DrawTriangles {
         vao = VertexArrayBuilder.newInstance()
                 .primitiveMode(PrimitiveType.TRIANGLES)
                 .addAccessor(0,
-                        new VertexArrayAccessor(buffer, 0, 8,  DataType.FLOAT, 2, false)
+                        new VertexArrayAccessor(buffer, 0, 0, 8,  DataType.FLOAT, 2, false)
                 )
                 .addElementBuffer(
-                        new VertexArrayAccessor(elementBuffer, 0, 4, DataType.U_INT, 1, false)
+                        new VertexArrayAccessor(elementBuffer, 0,0, 4, DataType.U_INT, 1, false)
                 )
                 .build();
 

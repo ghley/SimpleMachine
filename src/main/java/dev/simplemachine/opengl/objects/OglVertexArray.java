@@ -28,13 +28,14 @@ public class OglVertexArray extends AbstractOglObject {
     void addAccessor(int bindingIndex, VertexArrayAccessor accessor) {
         map.put(bindingIndex, accessor);
         var buffer = accessor.buffer();
+        var bufferByteOffset = accessor.bufferByteOffset();
         var byteOffset = accessor.byteOffset();
         var count = accessor.count();
         var type = accessor.dataType();
         var normalize = accessor.normalize();
         var byteStride = accessor.byteStride();
         glVertexArrayVertexBuffer(id, bindingIndex, buffer.id, byteOffset, byteStride);
-        glVertexArrayAttribFormat(id, bindingIndex, count, type.constant, normalize, byteOffset);
+        glVertexArrayAttribFormat(id, bindingIndex, count, type.constant, normalize, bufferByteOffset);
         glVertexArrayAttribBinding(id, bindingIndex, bindingIndex);
         glEnableVertexArrayAttrib(id, bindingIndex);
     }
@@ -49,9 +50,14 @@ public class OglVertexArray extends AbstractOglObject {
         this.primitiveType = primitiveType;
     }
 
+    public void drawArrays(int count) {
+        bind();
+        glDrawArrays(primitiveType.constant, 0, count);
+    }
+
     public void drawElements() {
         bind();
-        glDrawElements(primitiveType.constant, elementBuffer.getByteLength() / DataType.U_INT.bitSize * 8, GL_UNSIGNED_INT, 0);
+        glDrawElements(primitiveType.constant, elementBuffer.getByteLength() * 8  / DataType.U_INT.bitSize, GL_UNSIGNED_INT, 0);
     }
 
     public void drawElementsBaseVertex(int num, int baseVertex) {

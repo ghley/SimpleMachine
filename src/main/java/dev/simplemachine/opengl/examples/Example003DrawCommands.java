@@ -2,11 +2,10 @@ package dev.simplemachine.opengl.examples;
 
 import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
+import dev.simplemachine.opengl.glenum.DataType;
+import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.ShaderType;
-import dev.simplemachine.opengl.objects.BufferBuilder;
-import dev.simplemachine.opengl.objects.OglProgram;
-import dev.simplemachine.opengl.objects.OglVertexArray;
-import dev.simplemachine.opengl.objects.ProgramBuilder;
+import dev.simplemachine.opengl.objects.*;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
@@ -86,23 +85,25 @@ public class Example003DrawCommands {
 
         var buffer = BufferBuilder.newInstance()
                 .flag(BufferStorageType.DYNAMIC_STORAGE)
-                .byteLength(64 * 8)
+                .byteLength((vertices.length + colors.length) * 4)
                 .build();
         buffer.setData(0, vertices);
-        buffer.setData(4 * 4, colors);
-        System.out.println(Arrays.toString(buffer.getDataFv()));
+        buffer.setData(4 * 4 * 4, colors);
 
+        var eleBuffer = BufferBuilder.newInstance()
+                .flag(BufferStorageType.DYNAMIC_STORAGE)
+                .byteLength(indices.length * 4)
+                .build();
+        eleBuffer.setData(indices);
 
-//        vao = VertexArrayBuilder.newInstance()
-//                .elementArray(indices.length)
-//                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 0)) //position
-//                .addStaticField(new VertexAttribute(DataType.FLOAT, 4, 1)) //color
-//                .primitiveType(PrimitiveType.TRIANGLES)
-//                .numVertices(4)
-//                .build();
-//        vao.setSubData(0, vertices);
-//        vao.setSubData(1, colors);
-        vao.getElementBuffer().setData(indices);
+        vao = VertexArrayBuilder.newInstance()
+                .addElementBuffer(new VertexArrayAccessor(eleBuffer, 0, 0, 4, DataType.U_INT, 1, false))
+                .addAccessor(0,
+                        new VertexArrayAccessor(buffer, 0, 0, 4 * 4, DataType.FLOAT, 4, false))
+                .addAccessor(1,
+                        new VertexArrayAccessor(buffer, 4 * 4 * 4, 0, 4 * 4, DataType.FLOAT, 4, false))
+                .primitiveMode(PrimitiveType.TRIANGLES)
+                .build();
 
         GL11.glEnable(GL11.GL_CULL_FACE);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -120,7 +121,7 @@ public class Example003DrawCommands {
 
         model = new Matrix4f().translate(-3, 0, -5);
         program.setUniform("model_matrix", model);
-//        vao.drawArrays();
+        vao.drawArrays(3);
 
         model = new Matrix4f().translate(-1, 0, -5);
         program.setUniform("model_matrix", model);

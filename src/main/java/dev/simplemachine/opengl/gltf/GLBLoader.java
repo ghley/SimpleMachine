@@ -75,7 +75,7 @@ public final class GLBLoader {
     public void load(String file) {
 
     }
-//
+
 //    public OglGLTF load(byte[] glbByteArray) {
 //        var byteBuffer = ByteBuffer.wrap(glbByteArray).order(ByteOrder.LITTLE_ENDIAN);
 //        int magic = byteBuffer.getInt();

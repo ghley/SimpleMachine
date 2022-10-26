@@ -1,7 +1,5 @@
 package dev.simplemachine.ecs;
 
-import org.lwjgl.system.CallbackI;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -10,30 +8,31 @@ public class ECS {
     private Map<Class<? extends Component>, BitSet> componentMaskMap = new HashMap<>();
     private Map<Class<? extends AbstractSystem>, AbstractSystem> systemMap = new HashMap<>();
 
-    private Set<Entity> entities = new HashSet<>();
+    private Set<Entity> entities = new TreeSet<>();
 
-    private long currNextId = 0L; // could start at -Long max?
+    private long nextOpenId = 0L; // could start at -Long max?
     private Deque<Long> openIds = new LinkedList<>();
-
     private List<AbstractSystem> systemOrder = new ArrayList<>();
-
-    private Set<Entity> toBeDestroyed = new HashSet<>();
-    private Set<Entity> toBeAdded = new HashSet<>();
+    private List<Entity> toBeDestroyed = new ArrayList<>();
+    private List<Entity> toBeAdded = new ArrayList<>();
 
     public void updateAll() {
         toBeDestroyed.forEach(this::remove);
+        toBeDestroyed.clear();
         toBeAdded.forEach(this::insert);
-        systemOrder.forEach(AbstractSystem::update);
+        toBeAdded.forEach(this::updateMask);
+        toBeAdded.clear();
+        systemOrder.forEach(AbstractSystem::updateSystem);
     }
 
     public Entity createEntity() {
-        long nextId = currNextId;
-        if (!openIds.isEmpty()) {
-            nextId = openIds.pop();
-        }else {
-            currNextId++;
+        if (openIds.isEmpty()) {
+            for (int q = 0; q < 64; q++) {
+                openIds.add(nextOpenId++);
+            }
         }
-        var entity = new Entity(this, nextId);
+        var entity = new Entity(this, openIds.pollFirst());
+        entity.alive = false;
         toBeAdded.add(entity);
         return entity;
     }
@@ -43,7 +42,22 @@ public class ECS {
     }
 
     void insert(Entity entity) {
+        entity.alive = true;
+        entities.add(entity);
+    }
 
+    void updateMask(Entity entity) {
+        // could be more efficient
+        BitSet set = new BitSet();
+        for (var system : systemMap.values()) {
+            system.remove(entity);
+            set.clear();
+            set.or(system.componentMask);
+            set.and(entity.mask);
+            if (set.equals(system.componentMask)) {
+                system.add(entity);
+            }
+        }
     }
 
     void remove(Entity entity) {
@@ -58,14 +72,8 @@ public class ECS {
         }
     }
 
-    public void addComponent(Entity entity, Class<? extends Component> clazz) {
-        try {
-            var component = clazz.getConstructor().newInstance();
-            entity.mask.or(componentMaskMap.get(clazz));
-            entity.addComponent(component);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
+    BitSet getComponentMask(Class<? extends Component> clazz) {
+        return componentMaskMap.get(clazz);
     }
 
     public void registerSystem(Class<? extends AbstractSystem> system) {

@@ -1,20 +1,27 @@
 package dev.simplemachine.ecs;
 
+import dev.simplemachine.util.UnmodifiableIterator;
+
 import java.util.BitSet;
+import java.util.TreeSet;
 
 public abstract class AbstractSystem {
     final BitSet componentMask = new BitSet();
-
-
     protected abstract Class<? extends Component>[] requiredComponents();
 
-    protected abstract void update();
+    private final TreeSet<Entity> entities = new TreeSet<>();
 
-    public BitSet getComponentMask() {
-        return componentMask;
+    void updateSystem() {
+        update(new UnmodifiableIterator(entities.iterator()));
     }
 
-    void remove(Entity entity) {
+    public abstract void update(UnmodifiableIterator<Entity> iterator);
 
+    void remove(Entity entity) {
+        entities.remove(entity);
+    }
+
+    void add(Entity entity) {
+        entities.add(entity);
     }
 }

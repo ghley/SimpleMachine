@@ -5,40 +5,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Entity implements Comparable<Entity> {
-    public final ECS ecs;
     public final long id;
     final BitSet mask = new BitSet();
     private final Map<Class<? extends Component>, Component> components = new HashMap<>();
     boolean alive = false;
 
-    Entity(ECS ecs, long id) {
-        this.ecs = ecs;
+    Entity(long id) {
         this.id = id;
     }
 
-    public void addComponent(Class<? extends Component> clazz) {
-        if (components.keySet().contains(clazz)) {
-            return;
-        }
-        try {
-            var component = clazz.getConstructor().newInstance();
-            mask.or(ecs.getComponentMask(clazz));
-            components.put(clazz, component);
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (alive) {
-            ecs.updateMask(this);
-        }
+    void addComponent(Component component) {
+        components.put(component.getClass(), component);
+    }
+
+    void removeComponent(Class<? extends Component> clazz) {
+        components.remove(clazz);
+    }
+
+    public boolean hasComponent(Class<? extends Component> clazz) {
+        return components.containsKey(clazz);
     }
 
     public <T extends Component> T getComponent(Class<T> clazz) {
         return (T) components.get(clazz);
-    }
-
-    public void destroy() {
-        alive = false;
-        ecs.destroy(this);
     }
 
     @Override
@@ -52,10 +41,6 @@ public final class Entity implements Comparable<Entity> {
     @Override
     public int hashCode() {
         return (int) (id ^ (id >>> 32));
-    }
-
-    void setAlive(boolean alive) {
-        this.alive = alive;
     }
 
     public boolean isAlive() {

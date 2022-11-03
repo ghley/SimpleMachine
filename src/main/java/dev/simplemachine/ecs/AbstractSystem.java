@@ -11,17 +11,17 @@ public abstract class AbstractSystem {
 
     private final TreeSet<Entity> entities = new TreeSet<>();
 
-    void updateSystem() {
+    protected void updateSystem() {
         update(new UnmodifiableIterator(entities.iterator()));
     }
 
     public abstract void update(UnmodifiableIterator<Entity> iterator);
 
-    void remove(Entity entity) {
+    protected void remove(Entity entity) {
         entities.remove(entity);
     }
 
-    void add(Entity entity) {
+    protected void add(Entity entity) {
         entities.add(entity);
     }
 }

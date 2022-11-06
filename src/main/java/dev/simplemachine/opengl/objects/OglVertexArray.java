@@ -60,6 +60,11 @@ public class OglVertexArray extends AbstractOglObject {
         glDrawElements(primitiveType.constant, elementBuffer.getByteLength() * 8  / DataType.U_INT.bitSize, GL_UNSIGNED_INT, 0);
     }
 
+    public void drawElements(int byteOffset) {
+        bind();
+        glDrawElements(primitiveType.constant, elementBuffer.getByteLength() * 8 / DataType.U_INT.bitSize, GL_UNSIGNED_INT, 0);
+    }
+
     public void drawElementsBaseVertex(int num, int baseVertex) {
         bind();
         GL45.glDrawElementsBaseVertex(primitiveType.constant, num, GL_UNSIGNED_INT, 0, baseVertex);

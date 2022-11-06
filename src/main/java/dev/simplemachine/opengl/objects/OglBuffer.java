@@ -25,11 +25,11 @@ public class OglBuffer extends AbstractOglObject {
         return arr;
     }
 
-    public void setData(int offset, byte[] data) {
+    public void setData(int byteOffset, byte[] data) {
         try (var memoryStack = MemoryStack.stackPush()) {
             var bb = memoryStack.malloc(data.length);
             bb.put(data);
-            GL45.glNamedBufferSubData(id, offset,  bb);
+            GL45.glNamedBufferSubData(id, byteOffset,  bb);
         }
     }
 
@@ -45,8 +45,8 @@ public class OglBuffer extends AbstractOglObject {
         GL45.glNamedBufferSubData(id, 0, data);
     }
 
-    public void setData(int offset, float[] data) {
-        GL45.glNamedBufferSubData(id, offset, data);
+    public void setData(int byteOffset, float[] data) {
+        GL45.glNamedBufferSubData(id, byteOffset, data);
     }
 
     public void setData(int[] data) {

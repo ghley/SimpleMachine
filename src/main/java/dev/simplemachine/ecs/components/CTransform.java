@@ -7,7 +7,6 @@ import org.joml.Vector3f;
 
 public class CTransform implements Component {
     private final Matrix4f transform = new Matrix4f();
-
     private final Vector3f translation = new Vector3f(0, 0, 0);
     private final Quaternionf rotation = new Quaternionf().identity();
     private final Vector3f scale = new Vector3f(1, 1, 1);

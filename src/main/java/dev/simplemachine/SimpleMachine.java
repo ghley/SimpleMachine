@@ -39,10 +39,9 @@ public class SimpleMachine {
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
 
-        dimension.x = 1024;
-        dimension.y = 768;
+        dimension.x = 512;
+        dimension.y = 512;
         window = GLFW.glfwCreateWindow(dimension.x, dimension.y, "Simple Machine", 0, 0);
-
 
         if (window == 0) {
             throw new RuntimeException("glfwCreateWindow() failed");
@@ -69,6 +68,9 @@ public class SimpleMachine {
         GLFW.glfwShowWindow(window);
 
         GL.createCapabilities();
+
+        GL11.glEnable(GL11.GL_CULL_FACE);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
     }
 
     private void loop() {

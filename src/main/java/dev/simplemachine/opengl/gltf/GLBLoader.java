@@ -3,13 +3,14 @@ package dev.simplemachine.opengl.gltf;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
-import dev.simplemachine.opengl.objects.BufferBuilder;
-import dev.simplemachine.opengl.objects.GLTFBuilder;
-import dev.simplemachine.opengl.objects.OglBuffer;
+import dev.simplemachine.opengl.objects.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
@@ -27,7 +28,8 @@ public final class GLBLoader {
     Map<String, Integer> bindingMap = Map.of(
             "POSITION", 0,
             "NORMAL", 1,
-            "TEXCOORD_0", 2
+            "TEXCOORD_0", 2,
+            "COLOR_0", 3
     );
 
     Map<Integer, PrimitiveType> primitiveMode = Map.of(
@@ -40,7 +42,7 @@ public final class GLBLoader {
             6, PrimitiveType.TRIANGLE_FAN
     );
 
-    Map<Integer, DataType> dataTypeMap = Map.of(
+    Map<Integer, DataType> componentTypeMap = Map.of(
             5120, DataType.BYTE,
             5121, DataType.U_BYTE,
             5122, DataType.SHORT,
@@ -76,96 +78,170 @@ public final class GLBLoader {
 
     }
 
-//    public OglGLTF load(byte[] glbByteArray) {
-//        var byteBuffer = ByteBuffer.wrap(glbByteArray).order(ByteOrder.LITTLE_ENDIAN);
-//        int magic = byteBuffer.getInt();
-//        if (magic != 0x46546C67) {
-//            Logger.getAnonymousLogger().info(String.format("Magic Number is not: 0x46546C67 but 0x%X",magic));
-//            return null;
-//        }
-//        int version = byteBuffer.getInt();
-//        if (version != 2) {
-//            Logger.getAnonymousLogger().info(String.format("Can only read Version 2.0 but this file is %d", version));
-//            return null;
-//        }
-//        int length = byteBuffer.getInt();
-//        if (glbByteArray.length != length) {
-//            Logger.getAnonymousLogger().info(String.format("File length is %d but header claims %d", glbByteArray.length, length));
-//            return null;
-//        }
-//
-//        record Chunk(int length, int type, byte[] data) {
-//        }
-//
-//        List<Chunk> chunks = new ArrayList<>();
-//
-//        while (byteBuffer.remaining() > 0) {
-//            int chunkLength = byteBuffer.getInt();
-//            int chunkType = byteBuffer.getInt();
-//            byte[] data = new byte[chunkLength];
-//            byteBuffer.get(data);
-//            chunks.add(new Chunk(chunkLength, chunkType, data));
-//        }
-//        try {
-//            ObjectMapper mapper = new ObjectMapper();
-//            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-//            mapper.setVisibility(
-//                    mapper.getSerializationConfig()
-//                            .getDefaultVisibilityChecker()
-//                            .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
-//
-//            gltf = mapper.readValue(chunks.get(0).data, Gltf.class);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        if (chunks.size() > 1) {
-//            glbPayload = chunks.get(1).data;
-//        }
-//
-//
-//        GLTFBuilder builder = GLTFBuilder.newInstance();
-//
-//        for (int q = 0; q < gltf.bufferViews.length; q++) {
-//            var bufferView = gltf.bufferViews[q];
-//            var buffer = gltf.buffers[bufferView.buffer];
-//            var array = buffer.uri == null ? glbPayload : null; // TODO load external data
-//            System.out.println(bufferView.byteOffset + "  "+bufferView.byteLength);
-//            array = Arrays.copyOfRange(array, bufferView.byteOffset,
-//                    bufferView.byteOffset + bufferView.byteLength);
-//            builder.addBuffer(q, array);
-//        }
-//
-//        for (int q = 0; q < gltf.meshes.length; q++) {
-//            var mesh = gltf.meshes[q];
-//            for (int r = 0; r < mesh.primitives.length; r++) {
-//                var primitive = mesh.primitives[r];
-//                var mode = primitive.mode == null ? 4 : primitive.mode;
-//
-//                for (var entry : primitive.attributes.entrySet()) {
-//                    var type = entry.getKey();
-//                    var index = entry.getValue();
-//                    var accessor = gltf.accessors[index];
-//                    var offset = accessor.byteOffset == null ? 0 : accessor.byteOffset;
-//                    var dataType = accessor.type;
-//                    var compType =  accessor.componentType;
-//                    var view = accessor.bufferView;
-//                    var count = accessor.count;
-//                    var normalized = accessor.normalized;
-//                    var bufferView = gltf.bufferViews[accessor.bufferView];
-//                    var stride = bufferView.byteStride == null ? typeSize.get(dataType) * 4 : bufferView.byteStride;
-//                    builder.bind(bindingMap.get(type), view, offset, stride, typeSize.get(dataType), dataTypeMap.get(compType).constant);
+    public Map<Integer, OglVertexArray> load(byte[] glbByteArray) {
+        var byteBuffer = ByteBuffer.wrap(glbByteArray).order(ByteOrder.LITTLE_ENDIAN);
+        int magic = byteBuffer.getInt();
+        if (magic != 0x46546C67) {
+            Logger.getAnonymousLogger().info(String.format("Magic Number is not: 0x46546C67 but 0x%X", magic));
+            return null;
+        }
+        int version = byteBuffer.getInt();
+        if (version != 2) {
+            Logger.getAnonymousLogger().info(String.format("Can only read Version 2.0 but this file is %d", version));
+            return null;
+        }
+        int length = byteBuffer.getInt();
+        if (glbByteArray.length != length) {
+            Logger.getAnonymousLogger().info(String.format("File length is %d but header claims %d", glbByteArray.length, length));
+            return null;
+        }
+
+        record Chunk(int length, int type, byte[] data) {
+        }
+
+        List<Chunk> chunks = new ArrayList<>();
+
+        while (byteBuffer.remaining() > 0) {
+            int chunkLength = byteBuffer.getInt();
+            int chunkType = byteBuffer.getInt();
+            byte[] data = new byte[chunkLength];
+            byteBuffer.get(data);
+            chunks.add(new Chunk(chunkLength, chunkType, data));
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            mapper.setVisibility(
+                    mapper.getSerializationConfig()
+                            .getDefaultVisibilityChecker()
+                            .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
+
+            gltf = mapper.readValue(chunks.get(0).data, Gltf.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (chunks.size() > 1) {
+            glbPayload = chunks.get(1).data;
+            // change endianness
+            for (int q = 0; q < glbPayload.length; q += 4) {
+                byte tmp = glbPayload[q];
+                glbPayload[q] = glbPayload[q + 3];
+                glbPayload[q + 3] = tmp;
+                tmp = glbPayload[q + 1];
+                glbPayload[q + 1] = glbPayload[q + 2];
+                glbPayload[q + 2] = tmp;
+            }
+        }
+
+        Map<Integer, OglVertexArray> vaoMap = new HashMap<>();
+        Map<Integer, OglBuffer> vboMap = new HashMap<>();
+
+        for (int q = 0; q < gltf.meshes.length; q++) {
+
+            var mesh = gltf.meshes[q];
+            for (int r = 0; r < mesh.primitives.length; r++) {
+                VertexArrayBuilder vaoBuilder = VertexArrayBuilder.newInstance();
+                var primitive = mesh.primitives[r];
+                vaoBuilder.primitiveMode(primitiveMode.get(primitive.mode == null ? 4 : primitive.mode));
+                var mode = primitive.mode == null ? 4 : primitive.mode;
+                for (var entry : primitive.attributes.entrySet()) {
+                    var gltfAccessor = gltf.accessors[entry.getValue()];
+                    var gltfBufferView = gltf.bufferViews[gltfAccessor.bufferView];
+                    extract(vboMap, gltfAccessor);
+                    var oglBuffer = vboMap.get(gltfAccessor.bufferView);
+
+                    int bindingIndex = bindingMap.get(entry.getKey());
+
+                    int stride = gltfBufferView.byteStride == null ?
+                            (componentTypeMap.get(gltfAccessor.componentType).bitSize/8 * typeSize.get(gltfAccessor.type))
+                    : gltfBufferView.byteStride;
+
+                    // we have to pad to match buffer layout
+                    if (stride % 16 != 0) {
+                        stride += 16 - (stride % 16);
+                    }
+
+                    vaoBuilder.addAccessor(bindingIndex, new VertexArrayAccessor(
+                            oglBuffer,
+                            0,
+                            gltfAccessor.byteOffset == null ? 0 : gltfAccessor.byteOffset,
+                            stride,
+                            componentTypeMap.get(gltfAccessor.componentType),
+                            gltfAccessor.count,
+                            gltfAccessor.normalized == null ? false : gltfAccessor.normalized
+                    ));
+                }
+                if (primitive.indices != null) {
+                    var gltfAccessor = gltf.accessors[primitive.indices];
+                    var gltfBufferView = gltf.bufferViews[gltfAccessor.bufferView];
+                    extract(vboMap, gltfAccessor);
+                    var oglBuffer = vboMap.get(primitive.indices);
+
+                    int stride = gltfBufferView.byteStride == null ?
+                            (componentTypeMap.get(gltfAccessor.componentType).bitSize/8 * typeSize.get(gltfAccessor.type))
+                            : gltfBufferView.byteStride;
+
+                    vaoBuilder.addElementBuffer(new VertexArrayAccessor(
+                            oglBuffer,
+                            0,
+                            gltfAccessor.byteOffset == null ? 0 : gltfAccessor.byteOffset,
+                            stride,
+                            componentTypeMap.get(gltfAccessor.componentType),
+                            gltfAccessor.count,
+                            gltfAccessor.normalized == null ? false : gltfAccessor.normalized
+                    ));
+                }
+
+                vaoMap.put(r, vaoBuilder.build());
+            }
+        }
+        return vaoMap;
+    }
+
+    /**
+     * Buffers with a stride unequal 16 bytes will be padded!
+     *
+     * @param vboMap
+     * @param gltfAccessor
+     */
+    private void extract(Map<Integer, OglBuffer> vboMap, GltfAccessor gltfAccessor) {
+        System.out.println(gltfAccessor);
+        var gltfBufferView = gltf.bufferViews[gltfAccessor.bufferView];
+        if (!vboMap.containsKey(gltfAccessor.bufferView)) {
+            var array = Arrays.copyOfRange(glbPayload,
+                    gltfBufferView.byteOffset,
+                    gltfBufferView.byteOffset + gltfBufferView.byteLength);
+
+            int[] intArray = new int[array.length / 4];
+            ByteBuffer.wrap(array).asIntBuffer().get(intArray);
+            int size = typeSize.get(gltfAccessor.type) * componentTypeMap.get(gltfAccessor.componentType).bitSize/8;
+            if (size == 12) { // TODO only pad vec3, maybe create interleaved objects?
+                int newSize = size + (16 - size % 16);
+                var temp = intArray;
+                intArray = new int[newSize /4  * gltfAccessor.count];
+                for (int q = 0; q < gltfAccessor.count; q++) {
+                    System.arraycopy(temp, q*size/4, intArray, q*newSize/4, size/4);
+                }
+            }
+
+            var buffer = BufferBuilder.newInstance().flag(BufferStorageType.DYNAMIC_STORAGE)
+                    .byteLength(intArray.length*4).build();
+            buffer.setData(intArray);
+            vboMap.put(gltfAccessor.bufferView, buffer);
+//            switch (componentTypeMap.get(gltfAccessor.componentType)) {
+//                case FLOAT -> {
+//                    System.out.println(Arrays.toString(buffer.getDataFv()));
 //                }
-//
-//                var indices = primitive.indices;
-//                if (indices != null) {
-//                    var accessor = gltf.accessors[indices];
-//                    var view = accessor.bufferView;
-//                    builder.bindElementBuffer(view);
+//                case U_SHORT -> {
+//                    System.out.println(Arrays.toString(buffer.getDataSv()));
+//                }
+//                default -> {
+//                    System.out.println("asdf");
 //                }
 //            }
-//        }
-//        return builder.build();
-//    }
+        }
+    }
+
 //
 //    public OglBuffer getData(GltfAccessor accessor) {
 //        var bufferView = gltf.bufferViews[accessor.bufferView];

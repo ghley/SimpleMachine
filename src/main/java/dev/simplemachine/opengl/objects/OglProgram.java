@@ -68,4 +68,12 @@ public class OglProgram extends AbstractOglObject {
     public void setUniform(String name, Matrix4f matrix) {
         GL20.glUniformMatrix4fv(getLocation(name), false, matrix.get(new float[16])); // FIXME GC might not like this
     }
+
+    public void setUniform(String name, Matrix4f[] matrices) {
+        float[] data = new float[matrices.length*16];
+        for (int q = 0; q < matrices.length; q++) {
+            matrices[q].get(data, q * 16);
+        }
+        GL20.glUniformMatrix4fv(getLocation(name), false, data);
+    }
 }

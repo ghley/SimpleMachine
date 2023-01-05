@@ -1,22 +1,19 @@
 package dev.simplemachine.ecs.util;
 
 import dev.simplemachine.ecs.ECS;
-import dev.simplemachine.ecs.components.CStaticMesh;
 import dev.simplemachine.ecs.components.CTransform;
 import dev.simplemachine.ecs.components.CTreeNode;
-import dev.simplemachine.ecs.systems.SStaticMeshRenderer;
+import dev.simplemachine.ecs.systems.SRenderer;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class HierarchyTest {
 
     @Test
     public void test() {
         ECS ecs = new ECS();
-        ecs.registerSystem(SStaticMeshRenderer.class);
+        ecs.registerSystem(SRenderer.class);
 
         var entity1 = ecs.createEntity();
         var entity2 = ecs.createEntity();

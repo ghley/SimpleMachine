@@ -6,18 +6,15 @@ import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.objects.*;
-import org.joml.AxisAngle4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL31.GL_PRIMITIVE_RESTART;
 import static org.lwjgl.opengl.GL31.glPrimitiveRestartIndex;
 
 public class Example004PrimitiveRestart {
-
-
     static SimpleMachine machine;
 
     public static void main(String[] args) {
@@ -32,7 +29,7 @@ public class Example004PrimitiveRestart {
 
     private static void init() {
         var vertexShader = """
-                #version 330
+                #version 450 core
                                 
                 uniform mat4 model_matrix;
                 uniform mat4 projection_matrix;
@@ -51,7 +48,7 @@ public class Example004PrimitiveRestart {
                 """;
 
         var fragmentShader = """
-                #version 330
+                #version 450 core
                                 
                 in vec4 vs_fs_color;
                                 
@@ -104,24 +101,20 @@ public class Example004PrimitiveRestart {
 
         var vbo = BufferBuilder.newInstance()
                 .flag(BufferStorageType.DYNAMIC_STORAGE)
-                .byteLength((cubeColors.length + cubePositions.length)* 4)
+                .byteLength((cubeColors.length + cubePositions.length) * 4)
                 .build();
         vbo.setData(0, cubePositions);
         vbo.setData(cubePositions.length * 4, cubeColors);
 
-         vao = VertexArrayBuilder.newInstance()
+        vao = VertexArrayBuilder.newInstance()
                 .primitiveMode(PrimitiveType.TRIANGLE_STRIP)
                 .addElementBuffer(
                         new VertexArrayAccessor(ebo, 0, 0, 4, DataType.U_INT, 1, false))
                 .addAccessor(0,
-                        new VertexArrayAccessor(vbo, 0, 0, 4*4, DataType.FLOAT, 4, false))
+                        new VertexArrayAccessor(vbo, 0, 0, 4 * 4, DataType.FLOAT, 4, false))
                 .addAccessor(1,
                         new VertexArrayAccessor(vbo, cubePositions.length * 4, 0, 4 * 4, DataType.FLOAT, 4, false))
                 .build();
-
-
-        GL11.glEnable(GL11.GL_CULL_FACE);
-        GL11.glEnable(GL_DEPTH_TEST);
 
         GL11.glEnable(GL_PRIMITIVE_RESTART);
         glPrimitiveRestartIndex(0xffff);
@@ -136,8 +129,8 @@ public class Example004PrimitiveRestart {
 
         Matrix4f model = new Matrix4f()
                 .translate(new Vector3f(0, 0, -5))
-                .rotate(t * 2* (float)Math.PI, new Vector3f(0, 0, 1))
-                .rotate(t * 2* (float)Math.PI, new Vector3f(0, 1, 0));
+                .rotate(t * 2 * (float) Math.PI, new Vector3f(0, 0, 1))
+                .rotate(t * 2 * (float) Math.PI, new Vector3f(0, 1, 0));
         Matrix4f proj = new Matrix4f()
                 .frustum(-1f, 1f, -1, 1, 1f, 500f);
 

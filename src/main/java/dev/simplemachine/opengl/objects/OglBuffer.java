@@ -3,6 +3,9 @@ package dev.simplemachine.opengl.objects;
 import org.lwjgl.opengl.GL45;
 import org.lwjgl.system.MemoryStack;
 
+import java.nio.ByteOrder;
+import java.util.Arrays;
+
 
 public class OglBuffer extends AbstractOglObject {
     private final int byteLength;
@@ -25,12 +28,10 @@ public class OglBuffer extends AbstractOglObject {
         return arr;
     }
 
-    public void setData(int byteOffset, byte[] data) {
-        try (var memoryStack = MemoryStack.stackPush()) {
-            var bb = memoryStack.malloc(data.length);
-            bb.put(data);
-            GL45.glNamedBufferSubData(id, byteOffset,  bb);
-        }
+    public short[] getDataSv() {
+        var arr = new short[byteLength/2];
+        GL45.glGetNamedBufferSubData(id, 0, arr);
+        return arr;
     }
 
     public void setData(byte[] data) {

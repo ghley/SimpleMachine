@@ -1,30 +1,36 @@
 package dev.simplemachine.opengl.examples;
 
 import dev.simplemachine.SimpleMachine;
+import dev.simplemachine.model.StaticMesh;
 import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.gltf.GLBLoader;
-import dev.simplemachine.opengl.objects.*;
+import dev.simplemachine.opengl.objects.OglProgram;
+import dev.simplemachine.opengl.objects.OglVertexArray;
+import dev.simplemachine.opengl.objects.ProgramBuilder;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL45;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.glDisable;
 
-public class Example005GLTF {
+
+public class Example006GLTFTextured {
 
 
     static SimpleMachine machine;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example005GLTF::init);
-        machine.setLoopCallback(Example005GLTF::loop);
+        machine.setInitCallback(Example006GLTFTextured::init);
+        machine.setLoopCallback(Example006GLTFTextured::loop);
         machine.run();
     }
 
-    static OglVertexArray vao;
-    static OglProgram program;
+    static StaticMesh mesh;
 
     private static void init() {
         var vertexShader = """
@@ -34,13 +40,13 @@ public class Example005GLTF {
                 uniform mat4 projection_matrix;
                                 
                 layout (location = 0) in vec3 position;
-                layout (location = 3) in vec4 color;
+                layout (location = 2) in vec2 uv;
                                 
-                out vec4 vs_fs_color;
+                out vec2 vs_fs_uv;
                                 
                 void main(void)
                 {
-                    vs_fs_color = color;
+                    vs_fs_uv = vec2(uv.x, 31821 - uv.y);
                     gl_Position = projection_matrix * (model_matrix * vec4(position,1));
                 }
                 """;
@@ -48,56 +54,63 @@ public class Example005GLTF {
         var fragmentShader = """
                 #version 450 core
                                 
-                in vec4 vs_fs_color;
-                                
+                in vec2 vs_fs_uv;
+                
+                layout (binding = 0) uniform sampler2D tex;
+                
                 layout (location = 0) out vec4 color;
                                 
                 void main(void)
                 {
-                    color = vec4(1,1,vs_fs_color.x,1);
+                    color = texture2D(tex, vs_fs_uv);
                 }
                 """;
 
-        program = ProgramBuilder.newInstance()
+        var program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vertexShader)
                 .attach(ShaderType.FRAGMENT_SHADER, fragmentShader)
                 .build();
 
         program.use();
 
+
+
         byte[] data = null;
         try {
-            data = Files.readAllBytes(Path.of("cube.glb"));
+            data = Files.readAllBytes(Path.of("wall.glb"));
         }catch (Exception e) {
             e.printStackTrace();
         }
 
         var map = GLBLoader.getInstance().load(data);
 
-        vao = map.get(0).getVao();
-
-        vao.bind();
+        mesh = map.get(0);
+        mesh.setProgram(program);
     }
 
     static float t = 0;
 
     private static void loop() {
-        t += 0.01f;
+        t += 0.001f;
 
-        program.use();
+        mesh.getProgram().use();
+
+        mesh.getTextures().entrySet().forEach((e)->{
+            GL45.glBindTextureUnit(e.getKey(), e.getValue().getId());
+        });
 
 
         Matrix4f model = new Matrix4f()
-                .translate(new Vector3f(0, 0, -5))
-                .rotate(t * 2 * (float) Math.PI, new Vector3f(0, 0, 1))
-                .rotate(t * 2 * (float) Math.PI, new Vector3f(0, 1, 0));
+                .translate(new Vector3f(0, 0, -4))
+                .rotate(t * 3 * (float) Math.PI, new Vector3f(0, 0.1f, 0.4f).normalize())
+                .rotate(t * 2 * (float) Math.PI, new Vector3f(0.34f, 0.6f, 0).normalize());
         Matrix4f proj = new Matrix4f()
                 .frustum(-1f, 1f, -1, 1, 1f, 500f);
 
-        program.setUniform("model_matrix", model);
-        program.setUniform("projection_matrix", proj);
+        mesh.getProgram().setUniform("model_matrix", model);
+        mesh.getProgram().setUniform("projection_matrix", proj);
 
-        vao.drawElements();
+        mesh.getVao().drawElements();
     }
 
 }

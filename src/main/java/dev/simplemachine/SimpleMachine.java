@@ -19,6 +19,16 @@ public class SimpleMachine {
     private Runnable loopCallback = ()->{};
 
     private final Vector2i dimension = new Vector2i();
+
+    public SimpleMachine() {
+        this(new SimpleMachineConfig(512,512));
+    }
+
+    public SimpleMachine(SimpleMachineConfig config) {
+        dimension.x = config.width();
+        dimension.y = config.height();
+    }
+
     public void run() {
         init();
         initCallback.run();
@@ -39,8 +49,6 @@ public class SimpleMachine {
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
 
-        dimension.x = 512;
-        dimension.y = 512;
         window = GLFW.glfwCreateWindow(dimension.x, dimension.y, "Simple Machine", 0, 0);
 
         if (window == 0) {

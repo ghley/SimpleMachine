@@ -3,7 +3,6 @@ package dev.simplemachine.opengl.examples;
 import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.DataType;
-import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.gltf.GLBLoader;
 import dev.simplemachine.opengl.objects.*;
@@ -15,15 +14,15 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class Example006Instancing {
+public class Example007Instancing {
 
     static SimpleMachine machine;
     private static OglVertexArray vao;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example006Instancing::init);
-        machine.setLoopCallback(Example006Instancing::loop);
+        machine.setInitCallback(Example007Instancing::init);
+        machine.setLoopCallback(Example007Instancing::loop);
         machine.run();
     }
 
@@ -96,7 +95,7 @@ public class Example006Instancing {
 
         var map = GLBLoader.getInstance().load(data);
 
-        vao = map.get(0);
+        vao = map.get(0).getVao();
 
         vao.bind();
 

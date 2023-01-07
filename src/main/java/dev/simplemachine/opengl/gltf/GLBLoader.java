@@ -3,11 +3,16 @@ package dev.simplemachine.opengl.gltf;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.simplemachine.model.StaticMesh;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
+import dev.simplemachine.opengl.glenum.TextureType;
 import dev.simplemachine.opengl.objects.*;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,7 +83,7 @@ public final class GLBLoader {
 
     }
 
-    public Map<Integer, OglVertexArray> load(byte[] glbByteArray) {
+    public Map<Integer, StaticMesh> load(byte[] glbByteArray) {
         var byteBuffer = ByteBuffer.wrap(glbByteArray).order(ByteOrder.LITTLE_ENDIAN);
         int magic = byteBuffer.getInt();
         if (magic != 0x46546C67) {
@@ -122,28 +127,49 @@ public final class GLBLoader {
         }
         if (chunks.size() > 1) {
             glbPayload = chunks.get(1).data;
-            // change endianness
-            for (int q = 0; q < glbPayload.length; q += 4) {
-                byte tmp = glbPayload[q];
-                glbPayload[q] = glbPayload[q + 3];
-                glbPayload[q + 3] = tmp;
-                tmp = glbPayload[q + 1];
-                glbPayload[q + 1] = glbPayload[q + 2];
-                glbPayload[q + 2] = tmp;
-            }
+            invertEndian(glbPayload);
         }
 
-        Map<Integer, OglVertexArray> vaoMap = new HashMap<>();
+        Map<Integer, StaticMesh> vaoMap = new HashMap<>();
         Map<Integer, OglBuffer> vboMap = new HashMap<>();
 
         for (int q = 0; q < gltf.meshes.length; q++) {
 
             var mesh = gltf.meshes[q];
             for (int r = 0; r < mesh.primitives.length; r++) {
+                var staticMesh = new StaticMesh();
                 VertexArrayBuilder vaoBuilder = VertexArrayBuilder.newInstance();
                 var primitive = mesh.primitives[r];
                 vaoBuilder.primitiveMode(primitiveMode.get(primitive.mode == null ? 4 : primitive.mode));
                 var mode = primitive.mode == null ? 4 : primitive.mode;
+
+                if (primitive.material != null) {
+                    var material = gltf.materials[primitive.material];
+                    if (material.pbrMetallicRoughness != null) {
+                        if (material.pbrMetallicRoughness.baseColorTexture != null) {
+                            var baseColorFactor = material.pbrMetallicRoughness.baseColorTexture.index;
+                            var baseTexture = gltf.textures[baseColorFactor];
+                            var source = gltf.images[baseTexture.source];
+                            var bufferView = gltf.bufferViews[source.bufferView];
+                            invertEndian(glbPayload);
+                            var array = Arrays.copyOfRange(glbPayload,
+                                    bufferView.byteOffset,
+                                    bufferView.byteOffset + bufferView.byteLength);
+                            invertEndian(glbPayload);
+                            try {
+                                var stream = new ByteArrayInputStream(array);
+                                BufferedImage image = ImageIO.read(stream);
+                                // load texture into opengl and put a reference somewhere, need to figure this out
+                                OglTexture tex = new OglTexture(TextureType.TEXTURE_2D);
+                                tex.load(image);
+                                staticMesh.getTextures().put(0, tex);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+
                 for (var entry : primitive.attributes.entrySet()) {
                     var gltfAccessor = gltf.accessors[entry.getValue()];
                     var gltfBufferView = gltf.bufferViews[gltfAccessor.bufferView];
@@ -157,9 +183,10 @@ public final class GLBLoader {
                     : gltfBufferView.byteStride;
 
                     // we have to pad to match buffer layout
-                    if (stride % 16 != 0) {
+                    if (stride % 16 != 0 && stride % 8 != 0) {
                         stride += 16 - (stride % 16);
                     }
+
 
                     vaoBuilder.addAccessor(bindingIndex, new VertexArrayAccessor(
                             oglBuffer,
@@ -181,6 +208,7 @@ public final class GLBLoader {
                             (componentTypeMap.get(gltfAccessor.componentType).bitSize/8 * typeSize.get(gltfAccessor.type))
                             : gltfBufferView.byteStride;
 
+
                     vaoBuilder.addElementBuffer(new VertexArrayAccessor(
                             oglBuffer,
                             0,
@@ -191,11 +219,22 @@ public final class GLBLoader {
                             gltfAccessor.normalized == null ? false : gltfAccessor.normalized
                     ));
                 }
-
-                vaoMap.put(r, vaoBuilder.build());
+                staticMesh.setVao(vaoBuilder.build());
+                vaoMap.put(r, staticMesh);
             }
         }
         return vaoMap;
+    }
+
+    private void invertEndian(byte[] array) {
+        for (int q = 0; q < array.length; q += 4) {
+            byte tmp = array[q];
+            array[q] = array[q + 3];
+            array[q + 3] = tmp;
+            tmp = array[q + 1];
+            array[q + 1] = array[q + 2];
+            array[q + 2] = tmp;
+        }
     }
 
     /**
@@ -228,46 +267,7 @@ public final class GLBLoader {
                     .byteLength(intArray.length*4).build();
             buffer.setData(intArray);
             vboMap.put(gltfAccessor.bufferView, buffer);
-//            switch (componentTypeMap.get(gltfAccessor.componentType)) {
-//                case FLOAT -> {
-//                    System.out.println(Arrays.toString(buffer.getDataFv()));
-//                }
-//                case U_SHORT -> {
-//                    System.out.println(Arrays.toString(buffer.getDataSv()));
-//                }
-//                default -> {
-//                    System.out.println("asdf");
-//                }
-//            }
         }
     }
-
-//
-//    public OglBuffer getData(GltfAccessor accessor) {
-//        var bufferView = gltf.bufferViews[accessor.bufferView];
-//        var buffer = gltf.buffers[bufferView.buffer];
-//        var array = buffer.uri == null ? glbPayload : null; // TODO load external data
-//        array = Arrays.copyOfRange(array, bufferView.byteOffset, bufferView.byteLength);
-//        array = Arrays.copyOfRange(array, accessor.byteOffset, array.length - accessor.byteOffset);
-//
-//        var dataType = dataTypeMap.get(accessor.componentType);
-//        var size = typeSize.get(accessor.type);
-//
-//        var builder = BufferBuilder.newInstance();
-//
-//        builder.dataType(dataTypeMap.get(dataType));
-//        builder.numberOfEntries(typeSize.get(size));
-//
-//
-//
-//
-//
-//
-//
-//        var data = ByteBuffer.wrap(array);
-//
-//
-//        return null;
-//    }
 
 }

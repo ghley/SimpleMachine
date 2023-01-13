@@ -10,7 +10,6 @@ import java.util.Map;
 public class StaticMesh {
     private OglVertexArray vao;
     private Map<Integer, OglTexture> textures = new HashMap<>();
-    private OglProgram program;
 
 
     public StaticMesh() {
@@ -23,14 +22,6 @@ public class StaticMesh {
 
     public Map<Integer, OglTexture> getTextures() {
         return textures;
-    }
-
-    public void setProgram(OglProgram program) {
-        this.program = program;
-    }
-
-    public OglProgram getProgram() {
-        return program;
     }
 
     public OglVertexArray getVao() {

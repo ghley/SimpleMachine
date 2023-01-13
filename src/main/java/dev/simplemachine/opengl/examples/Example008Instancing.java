@@ -14,15 +14,15 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class Example007Instancing {
+public class Example008Instancing {
 
     static SimpleMachine machine;
     private static OglVertexArray vao;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example007Instancing::init);
-        machine.setLoopCallback(Example007Instancing::loop);
+        machine.setInitCallback(Example008Instancing::init);
+        machine.setLoopCallback(Example008Instancing::loop);
         machine.run();
     }
 
@@ -95,7 +95,7 @@ public class Example007Instancing {
 
         var map = GLBLoader.getInstance().load(data);
 
-        vao = map.get(0).getVao();
+        vao = map.values().iterator().next().getVao();
 
         vao.bind();
 

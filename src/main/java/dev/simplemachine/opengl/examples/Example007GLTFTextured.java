@@ -5,7 +5,6 @@ import dev.simplemachine.model.StaticMesh;
 import dev.simplemachine.opengl.glenum.ShaderType;
 import dev.simplemachine.opengl.gltf.GLBLoader;
 import dev.simplemachine.opengl.objects.OglProgram;
-import dev.simplemachine.opengl.objects.OglVertexArray;
 import dev.simplemachine.opengl.objects.ProgramBuilder;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -14,23 +13,21 @@ import org.lwjgl.opengl.GL45;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
-import static org.lwjgl.opengl.GL11.glDisable;
 
-
-public class Example006GLTFTextured {
+public class Example007GLTFTextured {
 
 
     static SimpleMachine machine;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example006GLTFTextured::init);
-        machine.setLoopCallback(Example006GLTFTextured::loop);
+        machine.setInitCallback(Example007GLTFTextured::init);
+        machine.setLoopCallback(Example007GLTFTextured::loop);
         machine.run();
     }
 
     static StaticMesh mesh;
+    static OglProgram program;
 
     private static void init() {
         var vertexShader = """
@@ -66,7 +63,7 @@ public class Example006GLTFTextured {
                 }
                 """;
 
-        var program = ProgramBuilder.newInstance()
+        program = ProgramBuilder.newInstance()
                 .attach(ShaderType.VERTEX_SHADER, vertexShader)
                 .attach(ShaderType.FRAGMENT_SHADER, fragmentShader)
                 .build();
@@ -84,8 +81,7 @@ public class Example006GLTFTextured {
 
         var map = GLBLoader.getInstance().load(data);
 
-        mesh = map.get(0);
-        mesh.setProgram(program);
+        mesh = map.values().iterator().next();
     }
 
     static float t = 0;
@@ -93,7 +89,7 @@ public class Example006GLTFTextured {
     private static void loop() {
         t += 0.001f;
 
-        mesh.getProgram().use();
+        program.use();
 
         mesh.getTextures().entrySet().forEach((e)->{
             GL45.glBindTextureUnit(e.getKey(), e.getValue().getId());
@@ -107,8 +103,8 @@ public class Example006GLTFTextured {
         Matrix4f proj = new Matrix4f()
                 .frustum(-1f, 1f, -1, 1, 1f, 500f);
 
-        mesh.getProgram().setUniform("model_matrix", model);
-        mesh.getProgram().setUniform("projection_matrix", proj);
+        program.setUniform("model_matrix", model);
+        program.setUniform("projection_matrix", proj);
 
         mesh.getVao().drawElements();
     }

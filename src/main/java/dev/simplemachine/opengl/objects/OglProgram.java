@@ -1,13 +1,13 @@
 package dev.simplemachine.opengl.objects;
 
-import org.joml.Matrix4f;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
+import org.joml.*;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL45;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class OglProgram extends AbstractOglObject {
     private Map<String, Integer> locations = new HashMap<>();
@@ -49,6 +49,9 @@ public class OglProgram extends AbstractOglObject {
         if (!locations.containsKey(name)) {
             int location = GL20.glGetUniformLocation(id, name);
             locations.put(name, location);
+            if (location == -1) {
+                Logger.getAnonymousLogger().info(name+" location not found.");
+            }
         }
         return locations.get(name);
     }
@@ -61,8 +64,16 @@ public class OglProgram extends AbstractOglObject {
         GL20.glUniform3f(getLocation(name), vec3.x, vec3.y, vec3.z);
     }
 
+    public void setUniform(String name, Vector4f vec4) {
+        GL20.glUniform4f(getLocation(name), vec4.x, vec4.y, vec4.z, vec4.w);
+    }
+
     public void setUniform(String name, Vector2f vec2) {
         GL20.glUniform2f(getLocation(name), vec2.x, vec2.y);
+    }
+
+    public void setUniform(String name, Matrix3f matrix) {
+        GL20.glUniformMatrix3fv(getLocation(name), false, matrix.get(new float[9])); // FIXME GC might not like this
     }
 
     public void setUniform(String name, Matrix4f matrix) {
@@ -75,5 +86,10 @@ public class OglProgram extends AbstractOglObject {
             matrices[q].get(data, q * 16);
         }
         GL20.glUniformMatrix4fv(getLocation(name), false, data);
+    }
+
+    public void setUniformBlockBinding(String location, int uniformBufferIndex) {
+        int locationIndex = GL45.glGetUniformBlockIndex(id, location);
+        GL45.glUniformBlockBinding(id, locationIndex, uniformBufferIndex);
     }
 }

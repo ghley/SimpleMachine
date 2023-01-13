@@ -118,4 +118,29 @@ public class ECS {
         }
     }
 
+    /**
+     * careful, costly
+     *
+     * @param classes
+     * @return
+     */
+    public List<Entity> allEntitiesWith(Class<? extends Component>... classes) {
+        BitSet mask = new BitSet();
+        for (var c : classes) {
+            mask.or(componentMaskMap.get(c));
+        }
+
+        List<Entity> list = new ArrayList<>();
+        BitSet set = new BitSet();
+        for (var entity : entities) {
+            set.clear();
+            set.or(entity.mask);
+            set.and(mask);
+            if (set.equals(mask)) {
+                list.add(entity);
+            }
+        }
+        return list;
+    }
+
 }

@@ -11,15 +11,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 
-public class Example005GLTF {
+public class Example006GLTF {
 
 
     static SimpleMachine machine;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example005GLTF::init);
-        machine.setLoopCallback(Example005GLTF::loop);
+        machine.setInitCallback(Example006GLTF::init);
+        machine.setLoopCallback(Example006GLTF::loop);
         machine.run();
     }
 
@@ -74,7 +74,7 @@ public class Example005GLTF {
 
         var map = GLBLoader.getInstance().load(data);
 
-        vao = map.get(0).getVao();
+        vao = map.values().iterator().next().getVao();
 
         vao.bind();
     }

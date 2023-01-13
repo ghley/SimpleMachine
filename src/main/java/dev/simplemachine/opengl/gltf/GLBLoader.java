@@ -9,6 +9,9 @@ import dev.simplemachine.opengl.glenum.DataType;
 import dev.simplemachine.opengl.glenum.PrimitiveType;
 import dev.simplemachine.opengl.glenum.TextureType;
 import dev.simplemachine.opengl.objects.*;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -83,7 +86,7 @@ public final class GLBLoader {
 
     }
 
-    public Map<Integer, StaticMesh> load(byte[] glbByteArray) {
+    public Map<String, StaticMesh> load(byte[] glbByteArray) {
         var byteBuffer = ByteBuffer.wrap(glbByteArray).order(ByteOrder.LITTLE_ENDIAN);
         int magic = byteBuffer.getInt();
         if (magic != 0x46546C67) {
@@ -130,7 +133,7 @@ public final class GLBLoader {
             invertEndian(glbPayload);
         }
 
-        Map<Integer, StaticMesh> vaoMap = new HashMap<>();
+        Map<String, StaticMesh> vaoMap = new HashMap<>();
         Map<Integer, OglBuffer> vboMap = new HashMap<>();
 
         for (int q = 0; q < gltf.meshes.length; q++) {
@@ -151,6 +154,7 @@ public final class GLBLoader {
                             var baseTexture = gltf.textures[baseColorFactor];
                             var source = gltf.images[baseTexture.source];
                             var bufferView = gltf.bufferViews[source.bufferView];
+                            // ridiculous, I have no idea why the whole endian stuff doesn't work as its supposed to
                             invertEndian(glbPayload);
                             var array = Arrays.copyOfRange(glbPayload,
                                     bufferView.byteOffset,
@@ -179,24 +183,24 @@ public final class GLBLoader {
                     int bindingIndex = bindingMap.get(entry.getKey());
 
                     int stride = gltfBufferView.byteStride == null ?
-                            (componentTypeMap.get(gltfAccessor.componentType).bitSize/8 * typeSize.get(gltfAccessor.type))
-                    : gltfBufferView.byteStride;
+                            (componentTypeMap.get(gltfAccessor.componentType).bitSize / 8 * typeSize.get(gltfAccessor.type))
+                            : gltfBufferView.byteStride;
 
                     // we have to pad to match buffer layout
                     if (stride % 16 != 0 && stride % 8 != 0) {
                         stride += 16 - (stride % 16);
                     }
-
-
-                    vaoBuilder.addAccessor(bindingIndex, new VertexArrayAccessor(
+                    var accessor = new VertexArrayAccessor(
                             oglBuffer,
                             0,
                             gltfAccessor.byteOffset == null ? 0 : gltfAccessor.byteOffset,
                             stride,
                             componentTypeMap.get(gltfAccessor.componentType),
-                            gltfAccessor.count,
+                            typeSize.get(gltfAccessor.type),
                             gltfAccessor.normalized == null ? false : gltfAccessor.normalized
-                    ));
+                    );
+                    System.out.println(accessor);
+                    vaoBuilder.addAccessor(bindingIndex, accessor);
                 }
                 if (primitive.indices != null) {
                     var gltfAccessor = gltf.accessors[primitive.indices];
@@ -205,7 +209,7 @@ public final class GLBLoader {
                     var oglBuffer = vboMap.get(primitive.indices);
 
                     int stride = gltfBufferView.byteStride == null ?
-                            (componentTypeMap.get(gltfAccessor.componentType).bitSize/8 * typeSize.get(gltfAccessor.type))
+                            (componentTypeMap.get(gltfAccessor.componentType).bitSize / 8 * typeSize.get(gltfAccessor.type))
                             : gltfBufferView.byteStride;
 
 
@@ -215,12 +219,12 @@ public final class GLBLoader {
                             gltfAccessor.byteOffset == null ? 0 : gltfAccessor.byteOffset,
                             stride,
                             componentTypeMap.get(gltfAccessor.componentType),
-                            gltfAccessor.count,
+                            typeSize.get(gltfAccessor.type),
                             gltfAccessor.normalized == null ? false : gltfAccessor.normalized
                     ));
                 }
                 staticMesh.setVao(vaoBuilder.build());
-                vaoMap.put(r, staticMesh);
+                vaoMap.put(mesh.name, staticMesh);
             }
         }
         return vaoMap;
@@ -253,18 +257,17 @@ public final class GLBLoader {
 
             int[] intArray = new int[array.length / 4];
             ByteBuffer.wrap(array).asIntBuffer().get(intArray);
-            int size = typeSize.get(gltfAccessor.type) * componentTypeMap.get(gltfAccessor.componentType).bitSize/8;
+            int size = typeSize.get(gltfAccessor.type) * componentTypeMap.get(gltfAccessor.componentType).bitSize / 8;
             if (size == 12) { // TODO only pad vec3, maybe create interleaved objects?
                 int newSize = size + (16 - size % 16);
                 var temp = intArray;
-                intArray = new int[newSize /4  * gltfAccessor.count];
+                intArray = new int[newSize / 4 * gltfAccessor.count];
                 for (int q = 0; q < gltfAccessor.count; q++) {
-                    System.arraycopy(temp, q*size/4, intArray, q*newSize/4, size/4);
+                    System.arraycopy(temp, q * size / 4, intArray, q * newSize / 4, size / 4);
                 }
             }
-
             var buffer = BufferBuilder.newInstance().flag(BufferStorageType.DYNAMIC_STORAGE)
-                    .byteLength(intArray.length*4).build();
+                    .byteLength(intArray.length * 4).build();
             buffer.setData(intArray);
             vboMap.put(gltfAccessor.bufferView, buffer);
         }

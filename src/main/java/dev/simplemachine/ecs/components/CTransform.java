@@ -21,16 +21,16 @@ public class CTransform implements Component {
 
     public void setTranslation(Vector3f translation) {
         this.translation.set(translation);
-        transform.translationRotateScale(translation, rotation, scale);
+        transform.identity().translationRotateScale(translation, rotation, scale);
     }
 
     public void setRotation(Quaternionf rotation) {
         this.rotation.set(rotation);
-        transform.translationRotateScale(translation, rotation, scale);
+        transform.identity().translationRotateScale(translation, rotation, scale);
     }
 
     public void setScale(Vector3f scale) {
         this.scale.set(scale);
-        transform.translationRotateScale(translation, rotation, scale);
+        transform.identity().translationRotateScale(translation, rotation, scale);
     }
 }

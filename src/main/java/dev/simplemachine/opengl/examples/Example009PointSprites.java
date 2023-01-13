@@ -17,14 +17,14 @@ import java.util.stream.IntStream;
 import static org.lwjgl.opengl.GL11.glPointSize;
 import static org.lwjgl.opengl.GL32.GL_PROGRAM_POINT_SIZE;
 
-public class Example007PointSprites {
+public class Example009PointSprites {
 
     static SimpleMachine machine;
 
     public static void main(String[] args) {
         machine = new SimpleMachine();
-        machine.setInitCallback(Example007PointSprites::init);
-        machine.setLoopCallback(Example007PointSprites::loop);
+        machine.setInitCallback(Example009PointSprites::init);
+        machine.setLoopCallback(Example009PointSprites::loop);
         machine.run();
     }
 

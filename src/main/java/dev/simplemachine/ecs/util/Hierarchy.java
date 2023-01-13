@@ -25,10 +25,10 @@ public final class Hierarchy {
         parent.getComponent(CTreeNode.class).getChildren().forEach(Hierarchy::prune);
     }
 
-    public static Matrix4f getModelTransform(Entity entity) {
+    public static Matrix4f getTransform(Entity entity) {
         var parent = entity.getComponent(CTreeNode.class).getParent();
         if (parent != null) {
-            return new Matrix4f(getModelTransform(parent)).mul(entity.getComponent(CTransform.class).getTransform());
+            return new Matrix4f(getTransform(parent)).mul(entity.getComponent(CTransform.class).getTransform());
         }else {
             return entity.getComponent(CTransform.class).getTransform();
         }

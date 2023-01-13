@@ -26,6 +26,7 @@ public class OglVertexArray extends AbstractOglObject {
     }
 
     public void addAccessor(int bindingIndex, VertexArrayAccessor accessor) {
+        glBindVertexArray(0);
         map.put(bindingIndex, accessor);
         var buffer = accessor.buffer();
         var bufferByteOffset = accessor.bufferByteOffset();
@@ -41,6 +42,7 @@ public class OglVertexArray extends AbstractOglObject {
     }
 
     public void addInstanced(int bindingIndex, int divisor, VertexArrayAccessor accessor) {
+        glBindVertexArray(0);
         map.put(bindingIndex, accessor);
         var buffer = accessor.buffer();
         var bufferByteOffset = accessor.bufferByteOffset();
@@ -57,6 +59,7 @@ public class OglVertexArray extends AbstractOglObject {
     }
 
     void addElementBuffer(OglBuffer elementBuffer, DataType elementBufferType) {
+        glBindVertexArray(0);
         this.elementBufferType = elementBufferType;
         this.elementBuffer = elementBuffer;
         glVertexArrayElementBuffer(id, elementBuffer.id);

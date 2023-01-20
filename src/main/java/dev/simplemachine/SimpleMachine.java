@@ -4,10 +4,12 @@ import dev.simplemachine.ecs.ECS;
 import dev.simplemachine.ecs.components.CCamera;
 import dev.simplemachine.ecs.systems.SStaticMeshRenderer;
 import dev.simplemachine.ecs.systems.SUpdateCameraBuffer;
+import dev.simplemachine.input.*;
 import dev.simplemachine.opengl.GlobalVariables;
 import dev.simplemachine.opengl.glenum.BufferStorageType;
 import dev.simplemachine.opengl.objects.BufferBuilder;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -16,6 +18,9 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL45;
 import org.lwjgl.system.MemoryStack;
+
+import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.lwjgl.opengl.GL31C.GL_UNIFORM_BUFFER;
 
@@ -30,6 +35,10 @@ public class SimpleMachine {
     private Runnable loopCallback = ()->{};
 
     private final Vector2i dimension = new Vector2i();
+
+    private LinkedList<KeyboardInput> keyboardInputs = new LinkedList<>();
+    private LinkedList<MouseInput> mouseInputs = new LinkedList<>();
+    private Vector2f mousePosition = new Vector2f();
 
     public SimpleMachine() {
         this(new SimpleMachineConfig(512,512));
@@ -79,6 +88,44 @@ public class SimpleMachine {
                     (vidMode.height() - height.get(0))/2);
         }
 
+
+
+        GLFW.glfwSetCursorPosCallback(window, (window, x, y)-> {
+            mousePosition.x = (float)x;
+            mousePosition.y = (float)y;
+            mouseInputs.add(new MouseInput(mousePosition.x, mousePosition.y, -1, MouseInputType.MOVE));
+        });
+        GLFW.glfwSetMouseButtonCallback(window, (window, button, action, mods)->{
+            MouseInputType type = null;
+            switch (action) {
+                case GLFW.GLFW_PRESS -> {
+                    type = MouseInputType.PRESS;
+                }
+                case GLFW.GLFW_RELEASE -> {
+                    type = MouseInputType.RELEASE;
+                }
+                default->{
+                    return;
+                }
+            }
+            mouseInputs.add(new MouseInput(mousePosition.x, mousePosition.y, button, type));
+        });
+        GLFW.glfwSetKeyCallback(window, (window, key, scancode, action, mods)->{
+            KeyboardInputType type = null;
+            switch (action) {
+                case GLFW.GLFW_PRESS -> {
+                    type = KeyboardInputType.PRESS;
+                }
+                case GLFW.GLFW_RELEASE -> {
+                    type = KeyboardInputType.RELEASE;
+                }
+                default->{
+                    return;
+                }
+            }
+            keyboardInputs.add(new KeyboardInput(key, type));
+        });
+
         GLFW.glfwMakeContextCurrent(window);
 
         // v-sync
@@ -108,10 +155,14 @@ public class SimpleMachine {
         var cameraEntity = ecs.createEntity();
         ecs.addComponent(cameraEntity, CCamera.class);
         var camera = cameraEntity.getComponent(CCamera.class);
-        camera.setProjectionMatrix(new Matrix4f().perspective((float)Math.toRadians(90), 1, 0.01f, 1000f));
+        camera.setProjection(new Matrix4f().perspective((float)Math.toRadians(90), 1, 0.01f, 1000f));
         camera.setActive(true);
-        camera.setPosition(new Vector3f(0, 0, -10));
-        camera.setLookAt(new Vector3f(0, 0, -0.0001f));
+        camera.setView(
+                new Matrix4f()
+                        .lookAt(new Vector3f(0, 0, -10)
+                        , new Vector3f(0, 0, -0.0001f)
+                        , new Vector3f(0, 1, 0))
+        );
 
         ecs.updateAll();
     }
@@ -158,5 +209,17 @@ public class SimpleMachine {
 
     public Vector2i getDimension() {
         return dimension;
+    }
+
+    public float getWindowRatio() {
+        return dimension.x / dimension.y;
+    }
+
+    public LinkedList<MouseInput> getMouseInputs() {
+        return mouseInputs;
+    }
+
+    public LinkedList<KeyboardInput> getKeyboardInputs() {
+        return keyboardInputs;
     }
 }

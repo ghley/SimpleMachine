@@ -1,4 +1,4 @@
-package dev.simplemachine.examples;
+package dev.simplemachine.ecs.examples;
 
 import dev.simplemachine.SimpleMachine;
 import dev.simplemachine.ecs.components.CCamera;
@@ -8,6 +8,7 @@ import dev.simplemachine.ecs.components.CTreeNode;
 import dev.simplemachine.ecs.systems.SStaticMeshRenderer;
 import dev.simplemachine.opengl.ProgramDatabase;
 import dev.simplemachine.opengl.StaticMeshDatabase;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Example001StaticMesh {
@@ -24,6 +25,8 @@ public class Example001StaticMesh {
     static float t = 0.f;
 
     public static void init() {
+        ProgramDatabase.getOrCreateGridRenderer();
+
         StaticMeshDatabase.load("full.glb");
 
         var ecs = machine.getEcs();
@@ -34,7 +37,14 @@ public class Example001StaticMesh {
         entity.getComponent(CStaticMesh.class).setMesh(StaticMeshDatabase.get("full.glb", "Wall"));
 
         var list = ecs.allEntitiesWith(CCamera.class);
-        list.get(0).getComponent(CCamera.class).setPosition(new Vector3f(0, 3, -3));
+        list.get(0).getComponent(CCamera.class)
+                        .setView(
+                                new Matrix4f()
+                                        .lookAt(
+                                                new Vector3f(0, 3, -3),
+                                                new Vector3f(0, 0, 0),
+                                                new Vector3f(0, 1, 0))
+                        );
 
         ProgramDatabase.getOrCreateStaticMeshProgram().setUniform("lightDir",new Vector3f((float)Math.sin(t), -1, (float)Math.cos(t)).normalize());
     }

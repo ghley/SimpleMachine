@@ -25,8 +25,8 @@ public class SUpdateCameraBuffer extends AbstractSystem {
             var entity = iterator.next();
             var camera = entity.getComponent(CCamera.class);
             if (camera.isActive()) {
-                proj.set(camera.getProjectionMatrix());
-                view.lookAt(camera.getPosition(), camera.getLookAt(), new Vector3f(0, 1, 0));
+                proj.set(camera.getProjection());
+                view.set(camera.getView());
                 break;
             }
         }

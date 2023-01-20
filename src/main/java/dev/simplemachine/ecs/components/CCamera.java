@@ -2,44 +2,34 @@ package dev.simplemachine.ecs.components;
 
 import dev.simplemachine.ecs.Component;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 
 public class CCamera implements Component {
 
-    private Matrix4f projectionMatrix;
-    private Vector3f position;
-    private Vector3f lookAt;
+    private Matrix4f projection;
+    private Matrix4f view;
     private boolean active = true;
 
-    public Vector3f getPosition() {
-        return position;
+    public Matrix4f getProjection() {
+        return projection;
     }
 
-    public void setPosition(Vector3f position) {
-        this.position = position;
+    public void setProjection(Matrix4f projection) {
+        this.projection = projection;
     }
 
-    public Vector3f getLookAt() {
-        return lookAt;
+    public Matrix4f getView() {
+        return view;
     }
 
-    public void setLookAt(Vector3f lookAt) {
-        this.lookAt = lookAt;
-    }
-
-    public boolean isActive() {
-        return active;
+    public void setView(Matrix4f view) {
+        this.view = view;
     }
 
     public void setActive(boolean active) {
         this.active = active;
     }
 
-    public Matrix4f getProjectionMatrix() {
-        return projectionMatrix;
-    }
-
-    public void setProjectionMatrix(Matrix4f projectionMatrix) {
-        this.projectionMatrix = projectionMatrix;
+    public boolean isActive() {
+        return active;
     }
 }

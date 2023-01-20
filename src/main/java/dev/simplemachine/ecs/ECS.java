@@ -86,6 +86,10 @@ public class ECS {
         }
     }
 
+    public void addComponent(Entity entity, Class<? extends AbstractSystem> clazz) {
+        addComponent(entity, systemMap.get(clazz).requiredComponents());
+    }
+
     public void removeComponent(Entity entity, Class<? extends Component>... classes) {
         for (var clazz : classes) {
             entity.removeComponent(clazz);

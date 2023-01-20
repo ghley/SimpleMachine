@@ -42,9 +42,12 @@ public class Example005Lines {
                         uniform mat4 model;
                         uniform mat4 view;
                         uniform mat4 projection;
+                        
+                        out vec3 worldPosition;
                                                 
                         void main()
                         {
+                            worldPosition = vec4(model * vec4(aPos, 1.0)).xyz;
                             gl_Position = projection * view * model * vec4(aPos, 1.0);
                         }
                         """)
@@ -53,9 +56,14 @@ public class Example005Lines {
                         out vec4 FragColor;
                                                 
                         uniform vec4 color;
+                        
+                        in vec3 worldPosition;
                                                 
                         void main()
                         {
+                            if (int(worldPosition.x * 10) % 2 == 0) {
+                                discard;
+                            }
                             FragColor = color;
                         }
                         """).build();

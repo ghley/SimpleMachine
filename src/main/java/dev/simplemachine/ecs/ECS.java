@@ -8,9 +8,7 @@ public class ECS {
     private int maskIndex = 0;
     private Map<Class<? extends Component>, BitSet> componentMaskMap = new HashMap<>();
     private Map<Class<? extends AbstractSystem>, AbstractSystem> systemMap = new HashMap<>();
-
     private Set<Entity> entities = new TreeSet<>(); // list, but remove is slow, secondary map?
-
     private long nextOpenId = 0L; // could start at long.min?
     private Deque<Long> openIds = new LinkedList<>();
     private List<AbstractSystem> systemOrder = new ArrayList<>();
@@ -65,7 +63,7 @@ public class ECS {
         }
     }
 
-    void registerComponent(Class<? extends Component> component) {
+    public void registerComponent(Class<? extends Component> component) {
         if (!componentMaskMap.containsKey(component)) {
             var bitSet = new BitSet();
             bitSet.set(maskIndex++);
@@ -77,6 +75,9 @@ public class ECS {
     public void addComponent(Entity entity, Class<? extends Component>... classes) {
         try {
             for (var clazz : classes) {
+                if (!componentMaskMap.containsKey(clazz)) {
+                    registerComponent(clazz);
+                }
                 var comp = clazz.getConstructor().newInstance();
                 entity.addComponent(comp);
                 operations.add(new ModifyMaskOperation(this, entity, componentMaskMap.get(clazz), true));
@@ -145,6 +146,10 @@ public class ECS {
             }
         }
         return list;
+    }
+
+    public <T extends AbstractSystem> T  getSystem(Class<T> clazz) {
+        return (T)systemMap.get(clazz);
     }
 
 }

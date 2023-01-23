@@ -1,5 +1,5 @@
 package dev.simplemachine.ecs;
 
-public class Position implements Component {
+public class Position extends Component {
     float x = 0;
 }

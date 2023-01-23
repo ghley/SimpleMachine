@@ -3,7 +3,7 @@ package dev.simplemachine.ecs.components;
 import dev.simplemachine.ecs.Component;
 import org.joml.Matrix4f;
 
-public class CCamera implements Component {
+public class CCamera extends Component {
 
     private Matrix4f projection;
     private Matrix4f view;

@@ -10,16 +10,21 @@ public final class Entity implements Comparable<Entity> {
     private final Map<Class<? extends Component>, Component> components = new HashMap<>();
     boolean alive = false;
 
+    private Entity entity;
+
+    private Entity[] children;
+
     Entity(long id) {
         this.id = id;
     }
 
     void addComponent(Component component) {
         components.put(component.getClass(), component);
+        component.setOwner(this);
     }
 
     void removeComponent(Class<? extends Component> clazz) {
-        components.remove(clazz);
+        components.remove(clazz).setOwner(null);
     }
 
     public boolean hasComponent(Class<? extends Component> clazz) {
@@ -50,5 +55,9 @@ public final class Entity implements Comparable<Entity> {
     @Override
     public int compareTo(Entity o) {
         return Long.compare(id, o.id);
+    }
+
+    public void setParent(Entity entity) {
+        this.entity = entity;
     }
 }

@@ -1,4 +1,13 @@
 package dev.simplemachine.ecs;
 
-public interface Component {
+public abstract class Component {
+    private Entity owner;
+
+    void setOwner(Entity owner) {
+        this.owner = owner;
+    }
+
+    Entity getOwner() {
+        return owner;
+    }
 }

@@ -5,7 +5,6 @@ import dev.simplemachine.ecs.Component;
 import dev.simplemachine.ecs.Entity;
 import dev.simplemachine.ecs.components.CStaticMesh;
 import dev.simplemachine.ecs.components.CTransform;
-import dev.simplemachine.ecs.components.CTreeNode;
 import dev.simplemachine.opengl.ProgramDatabase;
 import dev.simplemachine.util.UnmodifiableIterator;
 import org.joml.Matrix3f;
@@ -15,7 +14,7 @@ public class SStaticMeshRenderer extends AbstractSystem {
     @Override
     protected Class<? extends Component>[] requiredComponents() {
         return new Class[] {
-                CStaticMesh.class, CTransform.class, CTreeNode.class
+                CStaticMesh.class, CTransform.class
         };
     }
 
@@ -27,6 +26,9 @@ public class SStaticMeshRenderer extends AbstractSystem {
             var entity = iterator.next();
             var transform = entity.getComponent(CTransform.class).getTransform();
             var meshComp = entity.getComponent(CStaticMesh.class);
+            if (!meshComp.isVisible()) {
+                continue;
+            }
             var mesh = meshComp.getMesh();
 
             program.setUniform("model", transform);

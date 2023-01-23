@@ -119,8 +119,10 @@ public class ProgramDatabase {
                         vec3 diffuse = diffuseTerm * vs_fs_color.xyz;
                         //vec3 specular = specularTerm * specularColor;
                         
+                        vec3 ambient = vs_fs_color.xyz * ambientLight;
+                        
                         //vec4 texel = texture(diffuseTex, fragmentTexCoord);
-                        color = vec4((ambientLight + diffuse), 1);
+                        color = vec4((ambient + diffuse), 1);
                     }
                     """);
 

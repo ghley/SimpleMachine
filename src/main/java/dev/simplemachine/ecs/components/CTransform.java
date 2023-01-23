@@ -5,7 +5,7 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-public class CTransform implements Component {
+public class CTransform extends Component {
     private final Matrix4f transform = new Matrix4f();
     private final Vector3f translation = new Vector3f(0, 0, 0);
     private final Quaternionf rotation = new Quaternionf().identity();
